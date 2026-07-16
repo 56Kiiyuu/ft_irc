@@ -1,7 +1,8 @@
 NAME = ircserv
 INC = includes
 SRCS =	srcs/main.cpp \
-		srcs/Parsing.cpp
+		srcs/Parsing.cpp \
+		srcs/Server.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 CPPFLAGS = -Wall -Werror -Wextra -std=c++98 -I$(INC)
