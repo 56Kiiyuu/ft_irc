@@ -19,7 +19,7 @@ int main() {
 		"UNKNOWN_CMD arg1 arg2\r\n" //invalid cmd
 	};
 	for (size_t i = 0; i < 5; ++i) {
-		std::cout << "\n[Reception reseau] : " << testCommands[i];
+		std::cout << "\n[Reception network] : " << testCommands[i];
 		// parsing
 		Message msg(testCommands[i]);
 		// routing to the correct cmd

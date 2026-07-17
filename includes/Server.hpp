@@ -10,6 +10,7 @@ class Client;
 class Server
 {
 	private:
+		std::string	_serverName;
 		//def type de la fonction pointeur
 		typedef void (Server::*CmdFunc)(Client& sender, const Message& msg);
 
@@ -26,6 +27,7 @@ class Server
 
 		void	initCommands();
 		void	routeCommand(Client& sender, const Message& msg);
+		void	sendReply(const Client& target, const std::string& replyContent);
 };
 
 #endif
