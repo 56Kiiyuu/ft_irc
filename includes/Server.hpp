@@ -5,11 +5,23 @@
 #include <map>
 #include "Message.hpp"
 
+
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+
 class Client;
 
 class Server
 {
 	private:
+		int _socketServer;
+		int _socketClient;
+		struct sockaddr_in _addrServer;
+		struct sockaddr_in _addrClient;
+
 		//def type de la fonction pointeur
 		typedef void (Server::*CmdFunc)(Client& sender, const Message& msg);
 
@@ -24,6 +36,7 @@ class Server
 		Server();
 		~Server();
 
+		void	startServer();
 		void	initCommands();
 		void	routeCommand(Client& sender, const Message& msg);
 };

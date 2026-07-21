@@ -5,7 +5,7 @@ SRCS =	srcs/main.cpp \
 		srcs/Server.cpp
 OBJS = $(SRCS:.cpp=.o)
 
-CPPFLAGS = -Wall -Werror -Wextra -std=c++98 -I$(INC)
+CPPFLAGS = -Wall -Werror -Wextra -std=c++98 -g -I$(INC)
 CPP = c++
 
 all: $(NAME)

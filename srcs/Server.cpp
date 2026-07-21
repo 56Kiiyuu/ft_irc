@@ -1,14 +1,66 @@
 #include "Server.hpp"
 #include "Client.hpp"
 #include <iostream>
+#include <unistd.h>
 
 Server::Server()
 {
 	initCommands();
+
+	this->_socketServer = socket(AF_INET, SOCK_STREAM, 0);
+	this->_addrServer.sin_addr.s_addr = inet_addr("127.0.0.1");
+	this->_addrServer.sin_family = AF_INET;
+	this->_addrServer.sin_port = htons(6667);
 }
 
 Server::~Server()
 {
+}
+
+void Server::startServer()
+{
+	bind(this->_socketServer, (const struct sockaddr *)&this->_addrServer, sizeof(this->_addrServer));
+	std::cout << "Bind Server" << std::endl;
+
+	listen(this->_socketServer, SOMAXCONN);
+	std::cout << "Server listening" << std::endl;
+
+	while (1)
+	{
+		socklen_t addrClientSize = sizeof(this->_addrClient);
+		this->_socketClient = accept(this->_socketServer, (struct sockaddr *)&this->_addrClient, &addrClientSize);
+
+		char msg[512];
+		sleep(5);
+		int n = recv(this->_socketClient, msg, sizeof(msg) - 1, 0);
+		if (n > 0)
+		{
+			msg[n] = '\0';
+			std::string msgClient(msg);
+
+			std::cout << "Client: " << msg << std::endl;
+			if (msgClient.compare("CAP LS 302"))
+			{
+				char msgserv[22] = ":server CAP * LS :\r\n";
+				send(this->_socketClient, msgserv, sizeof(msgserv), 0);
+				std::cout << "Server: " << msgserv << std::endl;
+
+				// ceci est un test a supprimer
+				char msgserv1[40] = ":server 461 * :Not enough parameters\r\n";
+				send(this->_socketClient, msgserv1, sizeof(msgserv1), 0);
+				std::cout << "Server: " << msgserv1 << std::endl;
+			}
+			else if (msgClient.compare("JOIN :"))
+			{
+				char msgserv[40] = ":server 461 * :Not enough parameters\r\n";
+				send(this->_socketClient, msgserv, sizeof(msgserv), 0);
+				std::cout << "send a msg" << std::endl;
+			}
+		}
+
+		char msgserv[22] = ":server CAP * LS :\r\n";
+		send(this->_socketClient, msgserv, sizeof(msgserv), 0);
+	}
 }
 
 void	Server::initCommands()
