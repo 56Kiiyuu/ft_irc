@@ -6,24 +6,33 @@
 #include <vector>
 #include <map>
 
+#include <netdb.h>
+
 //TEMPORAIRE
 class Client
 {
 	private:
+		typedef struct ClientInfo
+		{
+			std::string nickname;
+			std::string user;
+			struct sockaddr_in _addrClient;
+			socklen_t addrClientSize;
+		} ClientInfo;
+
+
 		std::vector<struct pollfd> _fd;
 
-		std::map<int, std::string> _nicknames;
-		std::map<int, std::string> _users;
+		std::map<int, ClientInfo> _clientInfo;
 
 
 	public:
-		Client(int serverSocket);
+		Client(int serverSocket, sockaddr_in addrServer);
 		~Client() {}
 
-		void addNewClient(int fd, std::string nickname, std::string user);
-		void setNickname(const std::string& nick);
-		const std::map<int, std::string>& Client::getNickname() const;
-		const std::vector<struct pollfd>& Client::getPollFd() const;
+		void addNewClient(int fd, struct sockaddr_in addrClient, std::string nickname, std::string user);
+		const std::map<int, ClientInfo>& getClientInfo() const;
+		const std::vector<struct pollfd>& getPollFd() const;
 };
 
 #endif

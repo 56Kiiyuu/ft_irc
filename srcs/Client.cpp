@@ -1,25 +1,32 @@
 #include "Client.hpp"
 
-Client::Client(int serverSocket)
+Client::Client(int serverSocket, sockaddr_in addrServer)
 {
 	/* setup du server fd dans le pollfd (en cas de connexion il sera en pollin) */
-	addNewClient(serverSocket, "Server", "Server");
+	addNewClient(serverSocket, addrServer, "Server", "Server");
 }
 
-void Client::addNewClient(int fd, std::string nickname, std::string user)
+void Client::addNewClient(int fd, struct sockaddr_in addrClient, std::string nickname, std::string user)
 {
 	struct pollfd tmpFd;
+	ClientInfo ci;
 
 	tmpFd.fd = fd;
 	tmpFd.events = POLLIN;
+
+	ci.nickname = nickname;
+	ci.user = user;
+	ci._addrClient = addrClient;
+	ci.addrClientSize = sizeof(addrClient);
+
+
 	this->_fd.push_back(tmpFd);
-	this->_nicknames.insert(std::pair<int, std::string>(fd, nickname));
-	this->_users.insert(std::pair<int, std::string>(fd, user));
+	this->_clientInfo.insert(std::pair<int, ClientInfo>(fd, ci));
 }
 
-const std::map<int, std::string>& Client::getNickname() const
+const std::map<int, Client::ClientInfo>& Client::getClientInfo() const
 {
-	return this->_nicknames;
+	return this->_clientInfo;
 }
 
 
