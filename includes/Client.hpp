@@ -2,19 +2,22 @@
 #define CLIENT_HPP
 
 #include <string>
+#include <poll.h>
 
 //TEMPORAIRE
 class Client
 {
 	private:
 		std::string _nickname;
-
+		struct pollfd _fd;
 	public:
-		Client() : _nickname("Guest") {}
+		Client();
+		Client(std::string nick, int socketFd);
 		~Client() {}
 
-		void setNickname(const std::string& nick) { _nickname = nick; }
-		const std::string& getNickname() const { return _nickname; }
+		void setNickname(const std::string& nick);
+		const std::string& getNickname() const;
+		const struct pollfd& getPollFd() const;
 };
 
 #endif
