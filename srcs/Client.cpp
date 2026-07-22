@@ -1,5 +1,10 @@
 #include "Client.hpp"
 
+Client::Client()
+{
+
+}
+
 Client::Client(int serverSocket, sockaddr_in addrServer)
 {
 	/* setup du server fd dans le pollfd (en cas de connexion il sera en pollin) */

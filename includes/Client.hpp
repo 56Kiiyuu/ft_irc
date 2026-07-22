@@ -27,6 +27,7 @@ class Client
 
 
 	public:
+		Client();
 		Client(int serverSocket, sockaddr_in addrServer);
 		~Client() {}
 
