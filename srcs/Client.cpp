@@ -29,13 +29,13 @@ void Client::addNewClient(int fd, struct sockaddr_in addrClient, std::string nic
 	this->_clientInfo.insert(std::pair<int, ClientInfo>(fd, ci));
 }
 
-const std::map<int, Client::ClientInfo>& Client::getClientInfo() const
+std::map<int, Client::ClientInfo>& Client::getClientInfo()
 {
 	return this->_clientInfo;
 }
 
 
-const std::vector<struct pollfd>& Client::getPollFd() const
+std::vector<struct pollfd>& Client::getPollFd()
 {
 	return this->_fd;
 }

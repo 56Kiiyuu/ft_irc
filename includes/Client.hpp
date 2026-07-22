@@ -32,8 +32,8 @@ class Client
 		~Client() {}
 
 		void addNewClient(int fd, struct sockaddr_in addrClient, std::string nickname, std::string user);
-		const std::map<int, ClientInfo>& getClientInfo() const;
-		const std::vector<struct pollfd>& getPollFd() const;
+		std::map<int, ClientInfo>& getClientInfo();
+		std::vector<struct pollfd>& getPollFd();
 };
 
 #endif
