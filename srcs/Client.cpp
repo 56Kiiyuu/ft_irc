@@ -7,7 +7,16 @@ Client::Client(int serverSocket)
 
 	tmpFd.fd = serverSocket;
 	tmpFd.events = POLLIN;
-	_fd.push_back({serverSocket, });
+	_fd.push_back(tmpFd);
+}
+
+void Client::addNewClient(int fd, std::string nickname, std::string user)
+{
+	struct pollfd tmpFd;
+
+	tmpFd.fd = fd;
+	tmpFd.events = POLLIN;
+	_fd.push_back(tmpFd);
 }
 
 void Client::setNickname(const std::string& nick)
