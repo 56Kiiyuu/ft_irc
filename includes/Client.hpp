@@ -4,6 +4,7 @@
 #include <string>
 #include <poll.h>
 #include <vector>
+#include <map>
 
 //TEMPORAIRE
 class Client
@@ -12,6 +13,11 @@ class Client
 		std::string _nickname;
 		std::string _user;
 		std::vector<struct pollfd> _fd;
+
+		std::map<int, std::string> _nicknames;
+		std::map<int, std::string> _users;
+
+
 	public:
 		Client(int serverSocket);
 		~Client() {}
