@@ -1,14 +1,13 @@
 #include "Client.hpp"
 
-Client::Client() : _nickname("Guest")
+Client::Client(int serverSocket)
 {
+	/* setup du server fd dans le pollfd (en cas de connexion il sera en pollin) */
+	struct pollfd tmpFd;
 
-}
-
-Client::Client(std::string nick, int socketFd) : _nickname(nick)
-{
-	_fd.fd = socketFd;
-	_fd.events = POLLIN;
+	tmpFd.fd = serverSocket;
+	tmpFd.events = POLLIN;
+	_fd.push_back({serverSocket, });
 }
 
 void Client::setNickname(const std::string& nick)
@@ -22,7 +21,7 @@ const std::string& Client::getNickname() const
 }
 
 
-const struct pollfd& Client::getPollFd() const
+const std::vector<struct pollfd>& Client::getPollFd() const
 {
 	return this->_fd;
 }
