@@ -3,11 +3,7 @@
 Client::Client(int serverSocket)
 {
 	/* setup du server fd dans le pollfd (en cas de connexion il sera en pollin) */
-	struct pollfd tmpFd;
-
-	tmpFd.fd = serverSocket;
-	tmpFd.events = POLLIN;
-	_fd.push_back(tmpFd);
+	addNewClient(serverSocket, "Server", "Server");
 }
 
 void Client::addNewClient(int fd, std::string nickname, std::string user)
@@ -16,17 +12,14 @@ void Client::addNewClient(int fd, std::string nickname, std::string user)
 
 	tmpFd.fd = fd;
 	tmpFd.events = POLLIN;
-	_fd.push_back(tmpFd);
+	this->_fd.push_back(tmpFd);
+	this->_nicknames.insert(std::pair<int, std::string>(fd, nickname));
+	this->_users.insert(std::pair<int, std::string>(fd, user));
 }
 
-void Client::setNickname(const std::string& nick)
+const std::map<int, std::string>& Client::getNickname() const
 {
-	_nickname = nick;
-}
-
-const std::string& Client::getNickname() const
-{
-	return _nickname;
+	return this->_nicknames;
 }
 
 
