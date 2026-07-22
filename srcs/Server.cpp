@@ -47,10 +47,18 @@ std::string	Server::rnl(int socketClient)
 
 void Server::startServer()
 {
-	bind(this->_socketServer, (const struct sockaddr *)&this->_addrServer, sizeof(this->_addrServer));
+	if (bind(this->_socketServer, (const struct sockaddr *)&this->_addrServer, sizeof(this->_addrServer)) == -1)
+	{
+		std::cout << "Error: bind" << std::endl;
+		return ;
+	}
 	std::cout << "Bind Server" << std::endl;
 
-	listen(this->_socketServer, SOMAXCONN);
+	if (listen(this->_socketServer, SOMAXCONN) == -1)
+	{
+		std::cout << "Error: bind" << std::endl;
+		return ;
+	}
 	std::cout << "Server listening" << std::endl;
 
 	socklen_t addrClientSize = sizeof(this->_addrClient);
@@ -73,6 +81,12 @@ void Server::startServer()
 			char msgserv1[40] = ":server 461 * :Not enough parameters\r\n";
 			send(this->_socketClient, msgserv1, sizeof(msgserv1), 0);
 			std::cout << "Server: " << msgserv1 << std::endl;
+		}
+		else if (line == "USER gchalmel gchalmel 127.0.0.1 :gchalmel")
+		{
+			char msgserv2[53] = "001 dan :Welcome to our IRC Server\r\n";
+			send(this->_socketClient, msgserv2, sizeof(msgserv2), 0);
+			std::cout << "Server: " << msgserv2 << std::endl;
 		}
 	}
 }
