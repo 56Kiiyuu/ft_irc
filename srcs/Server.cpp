@@ -5,14 +5,16 @@
 
 #include <stdio.h>
 
-Server::Server()
+Server::Server() : clients()
 {
-	initCommands();
+	// initCommands();
 
 	this->_socketServer = socket(AF_INET, SOCK_STREAM, 0);
 	this->_addrServer.sin_addr.s_addr = inet_addr("127.0.0.1");
 	this->_addrServer.sin_family = AF_INET;
 	this->_addrServer.sin_port = htons(6667);
+
+	clients.addNewClient(this->_socketServer, this->_addrServer, "Server", "Server");
 }
 
 Server::~Server()
@@ -49,7 +51,7 @@ void Server::startServer()
 {
 	if (bind(this->_socketServer, (const struct sockaddr *)&this->_addrServer, sizeof(this->_addrServer)) == -1)
 	{
-		std::cout << "Error: bind" << std::endl;
+		perror("bind: ");
 		return ;
 	}
 	std::cout << "Bind Server" << std::endl;
@@ -61,37 +63,73 @@ void Server::startServer()
 	}
 	std::cout << "Server listening" << std::endl;
 
-	socklen_t addrClientSize = sizeof(this->_addrClient);
-	this->_socketClient = accept(this->_socketServer, (struct sockaddr *)&this->_addrClient, &addrClientSize);
-	sleep(5);
 	while (1)
 	{
 
-		std::string line = rnl(this->_socketClient);
+		std::vector<struct pollfd> pollFd = clients.getPollFd();
 
-		std::cout << "Client: " << line << std::endl;
-		if (line == "CAP LS 302")
+		std::cout << "Wait poll" << std::endl;
+		int nbEvent = poll(pollFd.data(), pollFd.size(), -1);
+
+		if (nbEvent <= 0)
 		{
-			char msgserv[22] = ":server CAP * LS :\r\n";
-			send(this->_socketClient, msgserv, sizeof(msgserv), 0);
-			std::cout << "Server: " << msgserv << std::endl;
+			std::cout << "Error with poll" << std::endl;
+			return ;
 		}
-		else if (line == "JOIN :")
+
+		int actions = 0;
+		while (actions < nbEvent)
 		{
-			char msgserv1[40] = ":server 461 * :Not enough parameters\r\n";
-			send(this->_socketClient, msgserv1, sizeof(msgserv1), 0);
-			std::cout << "Server: " << msgserv1 << std::endl;
-		}
-		else if (line == "USER gchalmel gchalmel 127.0.0.1 :gchalmel")
-		{
-			char msgserv2[53] = "001 dan :Welcome to our IRC Server\r\n";
-			send(this->_socketClient, msgserv2, sizeof(msgserv2), 0);
-			std::cout << "Server: " << msgserv2 << std::endl;
+			// std::cout << "Poll detect a action" << std::endl;
+
+			if (pollFd[0].revents & POLLIN)
+			{
+				std::cout << "The action is pollin with socket server" << std::endl;
+
+				socklen_t addrClientSize = sizeof(this->_addrClient);
+				this->_socketClient = accept(this->_socketServer, (struct sockaddr *)&this->_addrClient, &addrClientSize);
+				std::cout << "Accept the client" << std::endl;
+
+
+				// CAP test
+				std::string line = rnl(this->_socketClient);
+
+				while (line.empty() == 0)
+				{
+					std::cout << "Client: " << line << std::endl;
+					if (line == "CAP LS 302")
+					{
+						char msgserv[22] = ":server CAP * LS :\r\n";
+						send(this->_socketClient, msgserv, sizeof(msgserv), 0);
+						std::cout << "Server: " << msgserv << std::endl;
+					}
+					else if (line == "JOIN :")
+					{
+						char msgserv1[40] = ":server 461 * :Not enough parameters\r\n";
+						send(this->_socketClient, msgserv1, sizeof(msgserv1), 0);
+						std::cout << "Server: " << msgserv1 << std::endl;
+					}
+					else if (line == "USER gchalmel gchalmel 127.0.0.1 :gchalmel")
+					{
+						char msgserv2[53] = "001 dan :Welcome to our IRC Server\r\n";
+						send(this->_socketClient, msgserv2, sizeof(msgserv2), 0);
+						std::cout << "Server: " << msgserv2 << std::endl;
+					}
+
+					line = rnl(this->_socketClient);
+				}
+
+
+
+				std::cout << "add new client" << std::endl;
+				clients.addNewClient(this->_socketClient, this->_addrClient, "test", "test");
+			}
+			actions++;
 		}
 	}
 }
 
-void	Server::initCommands()
+/*void	Server::initCommands()
 {
 	_commands["NICK"] = &Server::execNick;
 	_commands["JOIN"] = &Server::execJoin;
@@ -114,9 +152,9 @@ void	Server::routeCommand(Client& sender, const Message& msg)
 	{
 		std::cout << "Unknown command : " << cmd << std::endl;
 	}
-}
+}*/
 
-void	Server::execNick(Client& sender, const Message& msg)
+/*void	Server::execNick(Client& sender, const Message& msg)
 {
 	std::cout << "[execNick] EXEC" << std::endl;
 	if (msg.getParams().empty())
@@ -146,4 +184,4 @@ void Server::execPass(Client& sender, const Message& msg)
 {
 	(void)sender; (void)msg;
 	std::cout << "[execPass] mdp" << std::endl;
-}
+}*/

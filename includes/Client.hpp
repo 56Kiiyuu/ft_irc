@@ -22,9 +22,7 @@ class Client
 
 
 		std::vector<struct pollfd> _fd;
-
 		std::map<int, ClientInfo> _clientInfo;
-
 
 	public:
 		Client();
