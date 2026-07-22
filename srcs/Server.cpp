@@ -3,6 +3,8 @@
 #include <iostream>
 #include <unistd.h>
 
+#include <stdio.h>
+
 Server::Server()
 {
 	initCommands();
@@ -17,6 +19,32 @@ Server::~Server()
 {
 }
 
+std::string	Server::rnl(int socketClient)
+{
+	static std::string buff;
+	char tmpBuffChar[512];
+
+	int n;
+
+	while (1)
+	{
+		std::string::size_type pos = buff.find("\r\n");
+		if (pos != std::string::npos)
+		{
+			std::string retStr = buff.substr(0, pos);
+			buff.erase(0, pos + 2);
+			return retStr;
+		}
+
+		n = recv(socketClient, tmpBuffChar, sizeof(tmpBuffChar) - 1, 0);
+		if (n <= 0)
+			break;
+
+		buff.append(tmpBuffChar, n);
+	}
+	return "";
+}
+
 void Server::startServer()
 {
 	bind(this->_socketServer, (const struct sockaddr *)&this->_addrServer, sizeof(this->_addrServer));
@@ -25,41 +53,27 @@ void Server::startServer()
 	listen(this->_socketServer, SOMAXCONN);
 	std::cout << "Server listening" << std::endl;
 
+	socklen_t addrClientSize = sizeof(this->_addrClient);
+	this->_socketClient = accept(this->_socketServer, (struct sockaddr *)&this->_addrClient, &addrClientSize);
+	sleep(5);
 	while (1)
 	{
-		socklen_t addrClientSize = sizeof(this->_addrClient);
-		this->_socketClient = accept(this->_socketServer, (struct sockaddr *)&this->_addrClient, &addrClientSize);
 
-		char msg[512];
-		sleep(5);
-		int n = recv(this->_socketClient, msg, sizeof(msg) - 1, 0);
-		if (n > 0)
+		std::string line = rnl(this->_socketClient);
+
+		std::cout << "Client: " << line << std::endl;
+		if (line == "CAP LS 302")
 		{
-			msg[n] = '\0';
-			std::string msgClient(msg);
-
-			std::cout << "Client: " << msg << std::endl;
-			if (msgClient.compare("CAP LS 302"))
-			{
-				char msgserv[22] = ":server CAP * LS :\r\n";
-				send(this->_socketClient, msgserv, sizeof(msgserv), 0);
-				std::cout << "Server: " << msgserv << std::endl;
-
-				// ceci est un test a supprimer
-				char msgserv1[40] = ":server 461 * :Not enough parameters\r\n";
-				send(this->_socketClient, msgserv1, sizeof(msgserv1), 0);
-				std::cout << "Server: " << msgserv1 << std::endl;
-			}
-			else if (msgClient.compare("JOIN :"))
-			{
-				char msgserv[40] = ":server 461 * :Not enough parameters\r\n";
-				send(this->_socketClient, msgserv, sizeof(msgserv), 0);
-				std::cout << "send a msg" << std::endl;
-			}
+			char msgserv[22] = ":server CAP * LS :\r\n";
+			send(this->_socketClient, msgserv, sizeof(msgserv), 0);
+			std::cout << "Server: " << msgserv << std::endl;
 		}
-
-		char msgserv[22] = ":server CAP * LS :\r\n";
-		send(this->_socketClient, msgserv, sizeof(msgserv), 0);
+		else if (line == "JOIN :")
+		{
+			char msgserv1[40] = ":server 461 * :Not enough parameters\r\n";
+			send(this->_socketClient, msgserv1, sizeof(msgserv1), 0);
+			std::cout << "Server: " << msgserv1 << std::endl;
+		}
 	}
 }
 

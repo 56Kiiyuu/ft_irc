@@ -31,6 +31,10 @@ class Server
 		void	execJoin(Client& sender, const Message& msg);
 		void	execPrivmsg(Client& sender, const Message& msg);
 		void	execPass(Client& sender, const Message& msg);
+
+		// utils
+		std::string	rnl(int _socketClient);
+
 		// + plus tard;
 	public:
 		Server();
