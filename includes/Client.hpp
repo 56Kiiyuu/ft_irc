@@ -29,7 +29,7 @@ class Client
 		Client(int serverSocket, sockaddr_in addrServer);
 		~Client() {}
 
-		void addNewClient(int fd, struct sockaddr_in addrClient, std::string nickname, std::string user);
+		void addNewClient(int fd, struct sockaddr_in addrClient);
 		std::map<int, ClientInfo>& getClientInfo();
 		std::vector<struct pollfd>& getPollFd();
 };

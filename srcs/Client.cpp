@@ -8,10 +8,10 @@ Client::Client()
 Client::Client(int serverSocket, sockaddr_in addrServer)
 {
 	/* setup du server fd dans le pollfd (en cas de connexion il sera en pollin) */
-	addNewClient(serverSocket, addrServer, "Server", "Server");
+	addNewClient(serverSocket, addrServer);
 }
 
-void Client::addNewClient(int fd, struct sockaddr_in addrClient, std::string nickname, std::string user)
+void Client::addNewClient(int fd, struct sockaddr_in addrClient)
 {
 	struct pollfd tmpFd;
 	ClientInfo ci;
@@ -19,8 +19,8 @@ void Client::addNewClient(int fd, struct sockaddr_in addrClient, std::string nic
 	tmpFd.fd = fd;
 	tmpFd.events = POLLIN;
 
-	ci.nickname = nickname;
-	ci.user = user;
+	/*ci.nickname = nickname;
+	ci.user = user;*/
 	ci._addrClient = addrClient;
 	ci.addrClientSize = sizeof(addrClient);
 

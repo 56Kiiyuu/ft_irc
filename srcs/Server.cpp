@@ -5,6 +5,18 @@
 
 #include <stdio.h>
 
+// TODO : Mauvaise implementation
+// - revoir la fonction start server avec poll
+// en gros si pollFd[0] == POLLIN ca veut dire quil y a une nouvelle connexion juste accepte et creer un nouveau client
+// ensuite retourner a poll et attendre que le client est quelque chose a m'emvoyer (Genre CAP LS)
+// extraire la ligne via rnl et exec la line
+
+// supr le recv de rnl maintenant rnl va juste servir a extraire une ligne dun buffer
+// on va mettre un recv apres chaque poll ce recv sera dans une boucle
+// en gros quand poll detecte un POLLIN cest que coter client il y a eu 1 send. il se peut que send envoie en plusieurs fois la data
+// il va donc falloir plusieurs recv mais comme 1 pollin = 1 recv
+// etudier socket non bloquant qui peuvent rendre le rnl pottentiellent utilisable avec EAGAIN
+
 Server::Server() : clients()
 {
 	// initCommands();
@@ -14,7 +26,7 @@ Server::Server() : clients()
 	this->_addrServer.sin_family = AF_INET;
 	this->_addrServer.sin_port = htons(6667);
 
-	clients.addNewClient(this->_socketServer, this->_addrServer, "Server", "Server");
+	clients.addNewClient(this->_socketServer, this->_addrServer);
 }
 
 Server::~Server()
@@ -90,39 +102,33 @@ void Server::startServer()
 				this->_socketClient = accept(this->_socketServer, (struct sockaddr *)&this->_addrClient, &addrClientSize);
 				std::cout << "Accept the client" << std::endl;
 
-
+				clients.addNewClient(this->_socketClient, this->_addrClient);
+				std::cout << "add new client" << std::endl;
+			}
+			if (pollFd[1].revents & POLLIN) // tmp pour test avec un client
+			{
 				// CAP test
 				std::string line = rnl(this->_socketClient);
 
-				while (line.empty() == 0)
+				std::cout << "Client: " << line << std::endl;
+				if (line == "CAP LS 302")
 				{
-					std::cout << "Client: " << line << std::endl;
-					if (line == "CAP LS 302")
-					{
-						char msgserv[22] = ":server CAP * LS :\r\n";
-						send(this->_socketClient, msgserv, sizeof(msgserv), 0);
-						std::cout << "Server: " << msgserv << std::endl;
-					}
-					else if (line == "JOIN :")
-					{
-						char msgserv1[40] = ":server 461 * :Not enough parameters\r\n";
-						send(this->_socketClient, msgserv1, sizeof(msgserv1), 0);
-						std::cout << "Server: " << msgserv1 << std::endl;
-					}
-					else if (line == "USER gchalmel gchalmel 127.0.0.1 :gchalmel")
-					{
-						char msgserv2[53] = "001 dan :Welcome to our IRC Server\r\n";
-						send(this->_socketClient, msgserv2, sizeof(msgserv2), 0);
-						std::cout << "Server: " << msgserv2 << std::endl;
-					}
-
-					line = rnl(this->_socketClient);
+					char msgserv[22] = ":server CAP * LS :\r\n";
+					send(this->_socketClient, msgserv, sizeof(msgserv), 0);
+					std::cout << "Server: " << msgserv << std::endl;
 				}
-
-
-
-				std::cout << "add new client" << std::endl;
-				clients.addNewClient(this->_socketClient, this->_addrClient, "test", "test");
+				else if (line == "JOIN :")
+				{
+					char msgserv1[40] = ":server 461 * :Not enough parameters\r\n";
+					send(this->_socketClient, msgserv1, sizeof(msgserv1), 0);
+					std::cout << "Server: " << msgserv1 << std::endl;
+				}
+				else if (line == "USER gchalmel gchalmel 127.0.0.1 :gchalmel")
+				{
+					char msgserv2[53] = "001 dan :Welcome to our IRC Server\r\n";
+					send(this->_socketClient, msgserv2, sizeof(msgserv2), 0);
+					std::cout << "Server: " << msgserv2 << std::endl;
+				}
 			}
 			actions++;
 		}
