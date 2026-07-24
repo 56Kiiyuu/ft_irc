@@ -3,15 +3,18 @@
 
 #include <string>
 #include <map>
+
 #include "Message.hpp"
 #include "Client.hpp"
-
 
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+
+#include <fcntl.h>
+#include <errno.h>
 
 class Client;
 
@@ -37,7 +40,7 @@ class Server
 		void	execPass(Client& sender, const Message& msg);*/
 
 		// utils
-		std::string	rnl(int _socketClient);
+		std::string	rnl(std::string& buff);
 
 		// + plus tard;
 	public:

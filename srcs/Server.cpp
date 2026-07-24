@@ -33,28 +33,14 @@ Server::~Server()
 {
 }
 
-std::string	Server::rnl(int socketClient)
+std::string	Server::rnl(std::string& buff)
 {
-	static std::string buff;
-	char tmpBuffChar[512];
-
-	int n;
-
-	while (1)
+	std::string::size_type pos = buff.find("\r\n");
+	if (pos != std::string::npos)
 	{
-		std::string::size_type pos = buff.find("\r\n");
-		if (pos != std::string::npos)
-		{
-			std::string retStr = buff.substr(0, pos);
-			buff.erase(0, pos + 2);
-			return retStr;
-		}
-
-		n = recv(socketClient, tmpBuffChar, sizeof(tmpBuffChar) - 1, 0);
-		if (n <= 0)
-			break;
-
-		buff.append(tmpBuffChar, n);
+		std::string retStr = buff.substr(0, pos);
+		buff.erase(0, pos + 2);
+		return retStr;
 	}
 	return "";
 }
@@ -88,7 +74,7 @@ void Server::startServer()
 			std::cout << "Error with poll" << std::endl;
 			return ;
 		}
-
+	
 		int actions = 0;
 		while (actions < nbEvent)
 		{
@@ -101,33 +87,55 @@ void Server::startServer()
 				socklen_t addrClientSize = sizeof(this->_addrClient);
 				this->_socketClient = accept(this->_socketServer, (struct sockaddr *)&this->_addrClient, &addrClientSize);
 				std::cout << "Accept the client" << std::endl;
-
+				int f = fcntl(this->_socketClient, F_GETFL);
+				fcntl(this->_socketClient, F_SETFL, f | O_NONBLOCK);
 				clients.addNewClient(this->_socketClient, this->_addrClient);
 				std::cout << "add new client" << std::endl;
 			}
 			if (pollFd[1].revents & POLLIN) // tmp pour test avec un client
 			{
 				// CAP test
-				std::string line = rnl(this->_socketClient);
+				static std::string buff;
+				while (1)
+				{
+					char tmpBuffChar[512];
+					int n = recv(pollFd[1].fd, tmpBuffChar, sizeof(tmpBuffChar) - 1, 0);
+					if (n <= 0)
+					{
+						if (errno == EAGAIN || (errno == EWOULDBLOCK))
+							break ;
+						else
+						{
+							std::cout << "ERR: recv critique"<< std::endl;
+							break ;
+						}
+					}
+					buff.append(tmpBuffChar, n);
+				}
 
-				std::cout << "Client: " << line << std::endl;
-				if (line == "CAP LS 302")
+				std::string line = rnl(buff);
+				while (line.empty() == 0)
 				{
-					char msgserv[22] = ":server CAP * LS :\r\n";
-					send(this->_socketClient, msgserv, sizeof(msgserv), 0);
-					std::cout << "Server: " << msgserv << std::endl;
-				}
-				else if (line == "JOIN :")
-				{
-					char msgserv1[40] = ":server 461 * :Not enough parameters\r\n";
-					send(this->_socketClient, msgserv1, sizeof(msgserv1), 0);
-					std::cout << "Server: " << msgserv1 << std::endl;
-				}
-				else if (line == "USER gchalmel gchalmel 127.0.0.1 :gchalmel")
-				{
-					char msgserv2[53] = "001 dan :Welcome to our IRC Server\r\n";
-					send(this->_socketClient, msgserv2, sizeof(msgserv2), 0);
-					std::cout << "Server: " << msgserv2 << std::endl;
+					std::cout << "Client: " << line << std::endl;
+					if (line == "CAP LS 302")
+					{
+						char msgserv[22] = ":server CAP * LS :\r\n";
+						send(this->_socketClient, msgserv, sizeof(msgserv) - 1, 0);
+						std::cout << "Server: " << msgserv << std::endl;
+					}
+					else if (line == "JOIN :")
+					{
+						char msgserv1[40] = ":server 461 * :Not enough parameters\r\n";
+						send(this->_socketClient, msgserv1, sizeof(msgserv1) - 1, 0);
+						std::cout << "Server: " << msgserv1 << std::endl;
+					}
+					else if (line == "USER gabch gabch 127.0.0.1 :gabch")
+					{
+						char msgserv2[228] = ":server 001 gabch :Welcome to my IRC Server\r\n";
+						send(this->_socketClient, msgserv2, sizeof(msgserv2) - 1, 0);
+						std::cout << "Server: " << msgserv2 << std::endl;
+					}
+					line = rnl(buff);
 				}
 			}
 			actions++;
