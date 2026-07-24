@@ -41,6 +41,10 @@ class Server
 
 		// utils
 		std::string	rnl(std::string& buff);
+		void handlePoll();
+		void handleCon();
+		void readSocketFd(std::string& buff, struct pollfd pollFd);
+		void handleCmds(std::string& buffClient, int socketFd);
 
 		// + plus tard;
 	public:

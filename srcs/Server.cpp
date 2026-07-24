@@ -5,18 +5,6 @@
 
 #include <stdio.h>
 
-// TODO : Mauvaise implementation
-// - revoir la fonction start server avec poll
-// en gros si pollFd[0] == POLLIN ca veut dire quil y a une nouvelle connexion juste accepte et creer un nouveau client
-// ensuite retourner a poll et attendre que le client est quelque chose a m'emvoyer (Genre CAP LS)
-// extraire la ligne via rnl et exec la line
-
-// supr le recv de rnl maintenant rnl va juste servir a extraire une ligne dun buffer
-// on va mettre un recv apres chaque poll ce recv sera dans une boucle
-// en gros quand poll detecte un POLLIN cest que coter client il y a eu 1 send. il se peut que send envoie en plusieurs fois la data
-// il va donc falloir plusieurs recv mais comme 1 pollin = 1 recv
-// etudier socket non bloquant qui peuvent rendre le rnl pottentiellent utilisable avec EAGAIN
-
 Server::Server() : clients()
 {
 	// initCommands();
@@ -45,6 +33,119 @@ std::string	Server::rnl(std::string& buff)
 	return "";
 }
 
+void Server::readSocketFd(std::string& buff, struct pollfd pollFd)
+{
+	while (1)
+	{
+		char tmpBuffChar[512];
+		int n = recv(pollFd.fd, tmpBuffChar, sizeof(tmpBuffChar) - 1, 0);
+		if (n <= 0)
+		{
+			if (errno == EAGAIN || (errno == EWOULDBLOCK))
+				break ;
+			else
+			{
+				std::cout << "ERR: recv critique"<< std::endl;
+					break ;
+			}
+		}
+		buff.append(tmpBuffChar, n);
+	}
+}
+
+void Server::handleCon()
+{
+	std::cout << "The action is pollin with socket server" << std::endl;
+
+	socklen_t addrClientSize = sizeof(this->_addrClient);
+	this->_socketClient = accept(this->_socketServer, (struct sockaddr *)&this->_addrClient, &addrClientSize);
+	std::cout << "Accept the client" << std::endl;
+	int f = fcntl(this->_socketClient, F_GETFL);
+	fcntl(this->_socketClient, F_SETFL, f | O_NONBLOCK);
+	this->clients.addNewClient(this->_socketClient, this->_addrClient);
+	std::cout << "add new client" << std::endl;
+}
+
+void Server::handleCmds(std::string& buffClient, int socketFd)
+{
+
+	std::string line = rnl(buffClient);
+	while (line.empty() == 0)
+	{
+		std::cout << "Client: " << line << std::endl;
+		if (line == "CAP LS 302")
+		{
+			char msgserv[22] = ":server CAP * LS : \r\n";
+			send(socketFd, msgserv, sizeof(msgserv) - 1, 0);
+			std::cout << "Server: " << msgserv << std::endl;
+		}
+		else if (line == "JOIN :")
+		{
+			char msgserv1[40] = ":server 461 * :Not enough parameters \r\n";
+			send(socketFd, msgserv1, sizeof(msgserv1) - 1, 0);
+			std::cout << "Server: " << msgserv1 << std::endl;
+		}
+		else if (line == "USER gchalmel gchalmel 127.0.0.1 :gchalmel")
+		{
+			char msgserv2[50] = ":server 001 gchalmel :Welcome to my IRC Server \r\n";
+			send(socketFd, msgserv2, sizeof(msgserv2) - 1, 0);
+			std::cout << "Server: " << msgserv2 << std::endl;
+		}
+		else if (line == "PING server")
+		{
+			char msgserv2[50] = ":server PONG server \r\n";
+			send(socketFd, msgserv2, sizeof(msgserv2) - 1, 0);
+			std::cout << "Server: " << msgserv2 << std::endl;
+		}
+		line = rnl(buffClient);
+	}
+}
+
+void Server::handlePoll()
+{
+	while (1)
+	{
+
+		std::vector<struct pollfd>& pollFd = this->clients.getPollFd();
+
+		std::cout << "Wait poll" << std::endl;
+		int nbEvent = poll(pollFd.data(), pollFd.size(), -1);
+
+		if (nbEvent <= 0)
+		{
+			std::cout << "Error with poll" << std::endl;
+			return ;
+		}
+
+		int actions = 0;
+		std::size_t i_fd = 1;
+		while (actions < nbEvent)
+		{
+			if (pollFd[0].revents & POLLIN)
+			{
+				handleCon();
+				pollFd[0].revents = 0;
+			}
+			else if (pollFd.size() > 1) // tmp pour test avec un client
+			{
+				while (i_fd < pollFd.size())
+				{
+					if (pollFd[i_fd].revents & POLLIN)
+						break ;
+					i_fd++;
+				}
+
+				std::string& buffClient = clients.getClientInfo()[pollFd[i_fd].fd].buff;
+				readSocketFd(buffClient, pollFd[i_fd]);
+
+				handleCmds(buffClient, pollFd[i_fd].fd);
+				pollFd[i_fd].revents = 0;
+			}
+			actions++;
+		}
+	}
+}
+
 void Server::startServer()
 {
 	if (bind(this->_socketServer, (const struct sockaddr *)&this->_addrServer, sizeof(this->_addrServer)) == -1)
@@ -60,95 +161,7 @@ void Server::startServer()
 		return ;
 	}
 	std::cout << "Server listening" << std::endl;
-
-	while (1)
-	{
-
-		std::vector<struct pollfd> pollFd = clients.getPollFd();
-
-		std::cout << "Wait poll" << std::endl;
-		int nbEvent = poll(pollFd.data(), pollFd.size(), -1);
-
-		if (nbEvent <= 0)
-		{
-			std::cout << "Error with poll" << std::endl;
-			return ;
-		}
-
-		int actions = 0;
-		while (actions < nbEvent)
-		{
-			// std::cout << "Poll detect a action" << std::endl;
-
-			if (pollFd[0].revents & POLLIN)
-			{
-				std::cout << "The action is pollin with socket server" << std::endl;
-
-				socklen_t addrClientSize = sizeof(this->_addrClient);
-				this->_socketClient = accept(this->_socketServer, (struct sockaddr *)&this->_addrClient, &addrClientSize);
-				std::cout << "Accept the client" << std::endl;
-				int f = fcntl(this->_socketClient, F_GETFL);
-				fcntl(this->_socketClient, F_SETFL, f | O_NONBLOCK);
-				clients.addNewClient(this->_socketClient, this->_addrClient);
-				std::cout << "add new client" << std::endl;
-			}
-			else if (pollFd[1].revents & POLLIN) // tmp pour test avec un client
-			{
-				// CAP test
-				static std::string buff;
-				while (1)
-				{
-					char tmpBuffChar[512];
-					int n = recv(pollFd[1].fd, tmpBuffChar, sizeof(tmpBuffChar) - 1, 0);
-					if (n <= 0)
-					{
-						if (errno == EAGAIN || (errno == EWOULDBLOCK))
-							break ;
-						else
-						{
-							std::cout << "ERR: recv critique"<< std::endl;
-							break ;
-						}
-					}
-					buff.append(tmpBuffChar, n);
-				}
-
-				std::string line = rnl(buff);
-				while (line.empty() == 0)
-				{
-					std::cout << "Client: " << line << std::endl;
-					if (line == "CAP LS 302")
-					{
-						char msgserv[22] = ":server CAP * LS : \r\n";
-						send(this->_socketClient, msgserv, sizeof(msgserv) - 1, 0);
-						std::cout << "Server: " << msgserv << std::endl;
-					}
-					else if (line == "JOIN :")
-					{
-						char msgserv1[40] = ":server 461 * :Not enough parameters \r\n";
-						send(this->_socketClient, msgserv1, sizeof(msgserv1) - 1, 0);
-						std::cout << "Server: " << msgserv1 << std::endl;
-					}
-					else if (line == "USER gchalmel gchalmel 127.0.0.1 :gchalmel")
-					{
-						char msgserv2[50] = ":server 001 gchalmel :Welcome to my IRC Server \r\n";
-						send(this->_socketClient, msgserv2, sizeof(msgserv2) - 1, 0);
-						std::cout << "Server: " << msgserv2 << std::endl;
-					}
-					else if (line == "PING server")
-					{
-						char msgserv2[50] = ":server PONG server \r\n";
-						send(this->_socketClient, msgserv2, sizeof(msgserv2) - 1, 0);
-						std::cout << "Server: " << msgserv2 << std::endl;
-					}
-					line = rnl(buff);
-				}
-			}
-			else
-				return ;
-			actions++;
-		}
-	}
+	handlePoll();
 }
 
 /*void	Server::initCommands()
