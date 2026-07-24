@@ -136,6 +136,26 @@ void Server::startServer()
 	}
 }
 
+//fonction qui recup la ligne complete d'unt client
+std::string extractLine(std::string& clientBuffer)
+{
+	size_t pos = clientBuffer.find("\n");
+	if (pos == std::string::npos)
+	{
+		return "";
+	}
+
+	size_t lineLength = pos;
+	if (lineLength > 0 && clientBuffer[lineLength - 1] == '\r')
+	{
+		lineLength--;
+	}
+
+	std::string line = clientBuffer.substr(0, lineLength);
+	clientBuffer.erase(0, pos + 1);
+	return line;
+}
+
 /*void	Server::initCommands()
 {
 	_commands["NICK"] = &Server::execNick;

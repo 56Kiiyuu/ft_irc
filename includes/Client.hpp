@@ -18,6 +18,7 @@ class Client
 			std::string user;
 			struct sockaddr_in _addrClient;
 			socklen_t addrClientSize;
+			std::string buffer;
 		} ClientInfo;
 
 
