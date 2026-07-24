@@ -74,7 +74,7 @@ void Server::startServer()
 			std::cout << "Error with poll" << std::endl;
 			return ;
 		}
-	
+
 		int actions = 0;
 		while (actions < nbEvent)
 		{
@@ -92,7 +92,7 @@ void Server::startServer()
 				clients.addNewClient(this->_socketClient, this->_addrClient);
 				std::cout << "add new client" << std::endl;
 			}
-			if (pollFd[1].revents & POLLIN) // tmp pour test avec un client
+			else if (pollFd[1].revents & POLLIN) // tmp pour test avec un client
 			{
 				// CAP test
 				static std::string buff;
@@ -119,25 +119,33 @@ void Server::startServer()
 					std::cout << "Client: " << line << std::endl;
 					if (line == "CAP LS 302")
 					{
-						char msgserv[22] = ":server CAP * LS :\r\n";
+						char msgserv[22] = ":server CAP * LS : \r\n";
 						send(this->_socketClient, msgserv, sizeof(msgserv) - 1, 0);
 						std::cout << "Server: " << msgserv << std::endl;
 					}
 					else if (line == "JOIN :")
 					{
-						char msgserv1[40] = ":server 461 * :Not enough parameters\r\n";
+						char msgserv1[40] = ":server 461 * :Not enough parameters \r\n";
 						send(this->_socketClient, msgserv1, sizeof(msgserv1) - 1, 0);
 						std::cout << "Server: " << msgserv1 << std::endl;
 					}
-					else if (line == "USER gabch gabch 127.0.0.1 :gabch")
+					else if (line == "USER gchalmel gchalmel 127.0.0.1 :gchalmel")
 					{
-						char msgserv2[228] = ":server 001 gabch :Welcome to my IRC Server\r\n";
+						char msgserv2[50] = ":server 001 gchalmel :Welcome to my IRC Server \r\n";
+						send(this->_socketClient, msgserv2, sizeof(msgserv2) - 1, 0);
+						std::cout << "Server: " << msgserv2 << std::endl;
+					}
+					else if (line == "PING server")
+					{
+						char msgserv2[50] = ":server PONG server \r\n";
 						send(this->_socketClient, msgserv2, sizeof(msgserv2) - 1, 0);
 						std::cout << "Server: " << msgserv2 << std::endl;
 					}
 					line = rnl(buff);
 				}
 			}
+			else
+				return ;
 			actions++;
 		}
 	}
