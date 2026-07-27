@@ -66,8 +66,9 @@ void Server::handleCon()
 	std::cout << "add new client" << std::endl;
 }
 
-void Server::handleCmds(std::string& buffClient, int socketFd)
+void Server::handleCmds(std::string& buffClient, int socketFd, std::string& nick, std::string& user)
 {
+	(void)user;
 
 	std::string line = rnl(buffClient);
 	while (line.empty() == 0)
@@ -85,11 +86,17 @@ void Server::handleCmds(std::string& buffClient, int socketFd)
 			send(socketFd, msgserv1, sizeof(msgserv1) - 1, 0);
 			std::cout << "Server: " << msgserv1 << std::endl;
 		}
-		else if (line == "USER gchalmel gchalmel 127.0.0.1 :gchalmel")
+		else if (line.find("NICK") == 0)
 		{
-			char msgserv2[50] = ":server 001 gchalmel :Welcome to my IRC Server \r\n";
-			send(socketFd, msgserv2, sizeof(msgserv2) - 1, 0);
-			std::cout << "Server: " << msgserv2 << std::endl;
+			nick = line.substr(5);
+			std::cout << "set nick: [" << nick << "]" << std::endl;
+		}
+		else if (line.find("USER") == 0)
+		{
+			std::string msgserv = ":server 001 " + nick + " :Welcome to my IRC Server \r\n";
+			// char msgserv2[50] = ":server 001 gchalmel :Welcome to my IRC Server \r\n";
+			send(socketFd, msgserv.c_str(), msgserv.size(), 0);
+			std::cout << "Server: " << msgserv << std::endl;
 		}
 		else if (line == "PING server")
 		{
@@ -126,7 +133,7 @@ void Server::handlePoll()
 				handleCon();
 				pollFd[0].revents = 0;
 			}
-			else if (pollFd.size() > 1) // tmp pour test avec un client
+			else if (pollFd.size() > 1)
 			{
 				while (i_fd < pollFd.size())
 				{
@@ -136,9 +143,12 @@ void Server::handlePoll()
 				}
 
 				std::string& buffClient = clients.getClientInfo()[pollFd[i_fd].fd].buff;
+				std::string& nick = clients.getClientInfo()[pollFd[i_fd].fd].nickname;
+				std::string& user = clients.getClientInfo()[pollFd[i_fd].fd].user;
+
 				readSocketFd(buffClient, pollFd[i_fd]);
 
-				handleCmds(buffClient, pollFd[i_fd].fd);
+				handleCmds(buffClient, pollFd[i_fd].fd, nick, user);
 				pollFd[i_fd].revents = 0;
 			}
 			actions++;

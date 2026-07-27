@@ -44,7 +44,7 @@ class Server
 		void handlePoll();
 		void handleCon();
 		void readSocketFd(std::string& buff, struct pollfd pollFd);
-		void handleCmds(std::string& buffClient, int socketFd);
+		void handleCmds(std::string& buffClient, int socketFd, std::string& nick, std::string& user);
 
 		// + plus tard;
 	public:
