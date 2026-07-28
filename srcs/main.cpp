@@ -5,7 +5,7 @@
 
 int main() {
 	//create serv
-	Server server;
+	/*Server server;
 	// fake client
 	Client dummyClient;
 	std::cout << "Base Nickname : " << dummyClient.getNickname() << std::endl;
@@ -24,6 +24,10 @@ int main() {
 		Message msg(testCommands[i]);
 		// routing to the correct cmd
 		server.routeCommand(dummyClient, msg);
-	}
+	}*/
+
+	Server server;
+
+	server.startServer();
 	return 0;
 }

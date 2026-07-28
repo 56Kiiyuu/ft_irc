@@ -2,12 +2,11 @@ NAME = ircserv
 INC = includes
 SRCS =	srcs/main.cpp \
 		srcs/Parsing.cpp \
-		srcs/Server.cpp
-
+		srcs/Server.cpp \
+		srcs/Client.cpp
 OBJS = $(SRCS:.cpp=.o)
-DEPS = $(OBJS:.o=.d)
 
-CPPFLAGS = -Wall -Werror -Wextra -std=c++98 -I$(INC) -MMD -g
+CPPFLAGS = -Wall -Werror -Wextra -std=c++98 -g -I$(INC)
 CPP = c++
 
 all: $(NAME)
