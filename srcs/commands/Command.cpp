@@ -1,0 +1,30 @@
+#include "Command.hpp"
+#include "Server.hpp"
+#include "Client.hpp"
+#include "Message.hpp"
+#include <iostream>
+
+CommandManager::CommandManager()
+{
+	_commands["PASS"] = &cmdPass;
+	_commands["NICK"] = &cmdNick;
+	_commands["USER"] = &cmdUser;
+	_commands["JOIN"] = &cmdJoin;
+	_commands["PRIVMSG"] = &cmdPrivmsg;
+}
+
+CommandManager::~CommandManager()
+{}
+
+void CommandManager::routeCommand(Server& server, Client& sender, const Message& msg) {
+	std::string cmd = msg.getCommand();
+
+	std::map<std::string, CmdHandler>::iterator it = _commands.find(cmd);
+	if (it != _commands.end()) {
+		CmdHandler handler = it->second;
+		handler(server, sender, msg); 
+	} else {
+		std::cout << "Commande inconnue : " << cmd << std::endl;
+		// Optionnel : sendReply(...) ERR_UNKNOWNCOMMAND (421)
+	}
+}
