@@ -1,4 +1,7 @@
 #include "Client.hpp"
+#include <unistd.h>
+
+
 
 Client::Client()
 {
@@ -11,12 +14,26 @@ Client::Client(int serverSocket, sockaddr_in addrServer)
 	addNewClient(serverSocket, addrServer);
 }
 
+Client::~Client()
+{
+	std::size_t i = 0;
+
+	std::cout << "Client destructor" << std::endl;
+
+	while (i < this->_fd.size())
+	{
+		close(this->_fd[i].fd);
+		i++;
+	}
+}
+
 void Client::addNewClient(int fd, struct sockaddr_in addrClient)
 {
 	struct pollfd tmpFd;
 	ClientInfo ci;
 
 	tmpFd.fd = fd;
+	tmpFd.revents = 0;
 	tmpFd.events = POLLIN;
 
 	/*ci.nickname = nickname;

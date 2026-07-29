@@ -16,10 +16,17 @@ Server::Server() : clients()
 	this->_addrServer.sin_port = htons(6667);
 
 	clients.addNewClient(this->_socketServer, this->_addrServer);
+	this->_run = 1;
 }
 
 Server::~Server()
 {
+	std::cout << "server destructor" << std::endl;
+}
+
+int&	Server::getRun()
+{
+	return _run;
 }
 
 std::string	Server::rnl(std::string& buff)
@@ -82,7 +89,7 @@ void Server::handleCmds(std::string& buffClient, int socketFd)
 
 void Server::handlePoll()
 {
-	while (1)
+	while (this->_run)
 	{
 		std::vector<struct pollfd>& pollFd = this->clients.getPollFd();
 
