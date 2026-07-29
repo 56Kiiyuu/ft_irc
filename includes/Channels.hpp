@@ -18,12 +18,14 @@ class Channels
 	private:
 		std::vector<int> owner;
 		std::vector<int> user;
+		std::string name;
 		std::vector<std::string> modes;
 	public:
-		Channels(int ownerFd);
+		Channels(int ownerFd, std::string name);
 		void joinChannels(int fd);
 		void sendMsg(int msgFd, int serverFd, std::string msg);
 		~Channels();
+		std::string getName();
 };
 
 #endif

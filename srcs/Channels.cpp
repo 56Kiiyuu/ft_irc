@@ -1,8 +1,9 @@
 #include "Channels.hpp"
 
-Channels::Channels(int ownerFd)
+Channels::Channels(int ownerFd, std::string name)
 {
 	this->owner.push_back(ownerFd);
+	this->name = name;
 }
 
 void Channels::joinChannels(int fd)
@@ -39,4 +40,9 @@ void Channels::sendMsg(int msgFd, int serverFd, std::string msg)
 Channels::~Channels()
 {
 
+}
+
+std::string Channels::getName()
+{
+	return this->name;
 }

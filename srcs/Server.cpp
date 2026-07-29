@@ -29,6 +29,11 @@ int&	Server::getRun()
 	return _run;
 }
 
+std::vector<Channels>&	Server::getChannels()
+{
+	return channnels;
+}
+
 std::string	Server::rnl(std::string& buff)
 {
 	std::string::size_type pos = buff.find("\r\n");
