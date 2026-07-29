@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Privmsg.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kevlim <kevlim@student.42.fr>              +#+  +:+       +#+        */
+/*   By: gabch <gabch@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/29 13:17:54 by kevlim            #+#    #+#             */
-/*   Updated: 2026/07/29 15:58:21 by kevlim           ###   ########.fr       */
+/*   Updated: 2026/07/29 18:04:39 by gabch            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include "Client.hpp"
 #include "Message.hpp"
 #include <iostream>
+#include "Channels.hpp"
 
 void cmdPrivmsg(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg)
 {
@@ -38,7 +39,23 @@ void cmdPrivmsg(Server& server, Client::ClientInfo& sender, int socketFd, const 
 	//pr l'instant j'ignore le #
 	if (target[0] == '#')
 	{
-		std::cout << "[PRIVMSG] Salon " << target << " ignore (pour l'instant)" << std::endl;
+		// std::cout << "[PRIVMSG] Salon " << target << " ignore (pour l'instant)" << std::endl;
+
+		std::size_t i = 0;
+		std::vector<Channels>& channels = server.getChannels();
+		while (i < channels.size())
+		{
+			std::cout << "channels name : " << channels[i].getName() << " Target : " << target << std::endl;
+			if (channels[i].getName() == target)
+			{
+				std::string prefix = ":" + sender.nickname + "!" + sender.user + "@127.0.0.1";
+				std::string formattedMsg = prefix + " PRIVMSG " + target + " :" + text + "\r\n";
+				channels[i].sendMsg(socketFd, server.getServerSocket(), formattedMsg);
+				std::cout << "[PRIVMSG] " << sender.nickname << " -> " << target << " : " << text << std::endl;
+				break ;
+			}
+			i++;
+		}
 		return;
 	}
 

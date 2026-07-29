@@ -13,6 +13,7 @@ void Channels::joinChannels(int fd)
 
 void Channels::sendMsg(int msgFd, int serverFd, std::string msg)
 {
+	(void)serverFd;
 	std::size_t i = 0;
 
 	while (i < owner.size())
@@ -22,7 +23,9 @@ void Channels::sendMsg(int msgFd, int serverFd, std::string msg)
 			i++;
 			continue;
 		}
-		send(serverFd, msg.c_str(), sizeof(msg.c_str()), 0);
+		send(owner[i], msg.c_str(), msg.length(), 0);
+		std::cout << "send msg" << std::endl;
+		i++;
 	}
 
 	i = 0;
@@ -33,7 +36,9 @@ void Channels::sendMsg(int msgFd, int serverFd, std::string msg)
 			i++;
 			continue;
 		}
-		send(serverFd, msg.c_str(), sizeof(msg.c_str()), 0);
+		send(user[i], msg.c_str(), msg.length(), 0);
+		std::cout << "send msg" << std::endl;
+		i++;
 	}
 }
 

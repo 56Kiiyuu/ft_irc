@@ -162,3 +162,8 @@ Client&	Server::getClients()
 {
 	return this->clients;
 }
+
+int Server::getServerSocket()
+{
+	return this->_socketServer;
+}

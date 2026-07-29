@@ -51,6 +51,7 @@ class Server
 		Client&	getClients();
 		int&		getRun();
 		std::vector<Channels>&	getChannels();
+		int getServerSocket();
 };
 
 #endif
