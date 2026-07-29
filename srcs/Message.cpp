@@ -14,32 +14,33 @@ Message::~Message()
 void	Message::parse()
 {
 	std::string line = _raw;
-
-	if (!line.empty() && line[line.size() - 1] == '\n')
-		line.erase(line.size() - 1);
-	if (!line.empty() && line[line.size() - 1] == '\r')
-		line.erase(line.size() - 1);
-	while (!line.empty()
-			&& (line[line.size() - 1] == ' '
-			|| line[line.size() - 1] == '\t'))
+	//clear \r, \n, spaces
+	while (!line.empty() && (line[line.size() - 1] == '\n' ||
+							 line[line.size() - 1] == '\r' ||
+							 line[line.size() - 1] == ' '  ||
+							 line[line.size() - 1] == '\t'))
 		line.erase(line.size() - 1);
 
 	if (line.empty())
 		return;
 
-	if (!line.empty() && line[0] == ':')
+	if (line[0] == ':')
 	{
 		size_t spacePos = line.find(' ');
 		if (spacePos != std::string::npos)
 			line = line.substr(spacePos + 1);
+		else
+			return; // Ligne invalide si uniquement un préfixe
 	}
 
 	size_t colonPos = line.find(" :");
 	std::string trailing = "";
+	bool hasTrailing = false;
 	if (colonPos != std::string::npos)
 	{
 		trailing = line.substr(colonPos + 2);
 		line = line.substr(0, colonPos);
+		hasTrailing = true;
 	}
 
 	std::stringstream ss(line);
@@ -48,13 +49,13 @@ void	Message::parse()
 	{
 		_command = token;
 		for (size_t i = 0; i < _command.size(); ++i)
-			_command[i] = std::toupper(_command[i]);
+			_command[i] = static_cast<char>(std::toupper(_command[i]));
 	}
 	while (ss >> token)
 	{
 		_params.push_back(token);
 	}
-	if (colonPos != std::string::npos)
+	if (hasTrailing)
 	{
 		_params.push_back(trailing);
 	}

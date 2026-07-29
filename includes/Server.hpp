@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 
+#include "Command.hpp"
 #include "Message.hpp"
 #include "Client.hpp"
 
@@ -16,8 +17,6 @@
 #include <fcntl.h>
 #include <errno.h>
 
-class Client;
-
 class Server
 {
 	private:
@@ -28,23 +27,14 @@ class Server
 		struct sockaddr_in _addrClient;
 
 		Client clients;
-
-
-		//def type de la fonction pointeur
-		typedef void (Server::*CmdFunc)(Client& sender, const Message& msg);
-
-		std::map<std::string, CmdFunc> _commands; // table de fonction (routage)
-		/*void	execNick(Client& sender, const Message& msg);
-		void	execJoin(Client& sender, const Message& msg);
-		void	execPrivmsg(Client& sender, const Message& msg);
-		void	execPass(Client& sender, const Message& msg);*/
+		CommandManager	_cmdManager;
 
 		// utils
 		std::string	rnl(std::string& buff);
 		void handlePoll();
 		void handleCon();
-		void readSocketFd(std::string& buff, struct pollfd pollFd);
-		void handleCmds(std::string& buffClient, int socketFd, std::string& nick, std::string& user);
+		bool readSocketFd(std::string& buff, struct pollfd& pollFd);
+		void handleCmds(std::string& buffClient, int socketFd);
 
 		// + plus tard;
 	public:
@@ -52,8 +42,7 @@ class Server
 		~Server();
 
 		void	startServer();
-		/*void	initCommands();
-		void	routeCommand(Client& sender, const Message& msg);*/
+		Client&	getClients();
 };
 
 #endif

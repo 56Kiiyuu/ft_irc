@@ -29,6 +29,22 @@ void Client::addNewClient(int fd, struct sockaddr_in addrClient)
 	this->_clientInfo.insert(std::pair<int, ClientInfo>(fd, ci));
 }
 
+void Client::removeClient(int fd)
+{
+	//Suppression de la map clientInfo
+	this->_clientInfo.erase(fd);
+
+	//Suppression du vector pollfd
+	for (std::vector<struct pollfd>::iterator it = this->_fd.begin(); it != this->_fd.end(); ++it)
+	{
+		if (it->fd == fd)
+		{
+			this->_fd.erase(it);
+			break;
+		}
+	}
+}
+
 std::map<int, Client::ClientInfo>& Client::getClientInfo()
 {
 	return this->_clientInfo;
