@@ -5,6 +5,7 @@
 #include <poll.h>
 #include <vector>
 #include <map>
+#include <iostream>
 
 #include <netdb.h>
 
@@ -14,7 +15,7 @@ class Client
 	public:
 		Client();
 		Client(int serverSocket, sockaddr_in addrServer);
-		~Client() {}
+		~Client();
 
 		typedef struct ClientInfo
 		{
