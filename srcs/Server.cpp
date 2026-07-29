@@ -67,7 +67,7 @@ void Server::handleCon()
 	std::cout << "Accept & Add new client FD " << this->_socketClient << std::endl;
 }
 
-void Server::handleCmds(std::string& buffClient, int socketFd)
+void Server::handleCmds(std::string& buffClient, int socketFd, std::string& nick, std::string& user)
 {
 	std::string line = rnl(buffClient);
 	while (!line.empty())
