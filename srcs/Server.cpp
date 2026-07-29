@@ -34,24 +34,26 @@ std::string	Server::rnl(std::string& buff)
 	return "";
 }
 
-void Server::readSocketFd(std::string& buff, struct pollfd pollFd)
+bool Server::readSocketFd(std::string& buff, struct pollfd& pollFd)
 {
-	while (1)
+	char tmpBuffChar[512];
+	int n = recv(pollFd.fd, tmpBuffChar, sizeof(tmpBuffChar) - 1, 0);
+
+	if (n > 0)
 	{
-		char tmpBuffChar[512];
-		int n = recv(pollFd.fd, tmpBuffChar, sizeof(tmpBuffChar) - 1, 0);
-		if (n <= 0)
-		{
-			if (errno == EAGAIN || (errno == EWOULDBLOCK))
-				break ;
-			else
-			{
-				std::cout << "ERR: recv critique"<< std::endl;
-					break ;
-			}
-		}
+		tmpBuffChar[n] = '\0';
 		buff.append(tmpBuffChar, n);
+		return true; //donnees recu succes
 	}
+	else if (n == 0 || (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK))
+	{
+		std::cout << "[-] Client FD " << pollFd.fd << " deconnecte." << std::endl;
+
+		close(pollFd.fd);
+		clients.removeClient(pollFd.fd);
+		return false; // Le client est deco
+	}
+	return true;
 }
 
 void Server::handleCon()
@@ -60,44 +62,20 @@ void Server::handleCon()
 
 	socklen_t addrClientSize = sizeof(this->_addrClient);
 	this->_socketClient = accept(this->_socketServer, (struct sockaddr *)&this->_addrClient, &addrClientSize);
-	std::cout << "Accept the client" << std::endl;
-	int f = fcntl(this->_socketClient, F_GETFL);
-	fcntl(this->_socketClient, F_SETFL, f | O_NONBLOCK);
+	fcntl(this->_socketClient, F_SETFL, O_NONBLOCK);
 	this->clients.addNewClient(this->_socketClient, this->_addrClient);
-	std::cout << "add new client" << std::endl;
+	std::cout << "Accept & Add new client FD " << this->_socketClient << std::endl;
 }
 
 void Server::handleCmds(std::string& buffClient, int socketFd)
 {
-
 	std::string line = rnl(buffClient);
-	while (line.empty() == 0)
+	while (!line.empty())
 	{
-		std::cout << "Client: " << line << std::endl;
-		if (line == "CAP LS 302")
-		{
-			char msgserv[22] = ":server CAP * LS : \r\n";
-			send(socketFd, msgserv, sizeof(msgserv) - 1, 0);
-			std::cout << "Server: " << msgserv << std::endl;
-		}
-		else if (line == "JOIN :")
-		{
-			char msgserv1[40] = ":server 461 * :Not enough parameters \r\n";
-			send(socketFd, msgserv1, sizeof(msgserv1) - 1, 0);
-			std::cout << "Server: " << msgserv1 << std::endl;
-		}
-		else if (line == "USER gchalmel gchalmel 127.0.0.1 :gchalmel")
-		{
-			char msgserv2[50] = ":server 001 gchalmel :Welcome to my IRC Server \r\n";
-			send(socketFd, msgserv2, sizeof(msgserv2) - 1, 0);
-			std::cout << "Server: " << msgserv2 << std::endl;
-		}
-		else if (line == "PING server")
-		{
-			char msgserv2[50] = ":server PONG server \r\n";
-			send(socketFd, msgserv2, sizeof(msgserv2) - 1, 0);
-			std::cout << "Server: " << msgserv2 << std::endl;
-		}
+		Message msg(line);
+		Client::ClientInfo& sender = clients.getClientInfo()[socketFd];
+		_cmdManager.routeCommand(*this, sender, socketFd, msg);
+
 		line = rnl(buffClient);
 	}
 }
@@ -106,7 +84,6 @@ void Server::handlePoll()
 {
 	while (1)
 	{
-
 		std::vector<struct pollfd>& pollFd = this->clients.getPollFd();
 
 		std::cout << "Wait poll" << std::endl;
@@ -115,34 +92,37 @@ void Server::handlePoll()
 		if (nbEvent <= 0)
 		{
 			std::cout << "Error with poll" << std::endl;
-			return ;
+			return;
 		}
 
-		int actions = 0;
-		std::size_t i_fd = 1;
-		while (actions < nbEvent)
+		for (size_t i = 0; i < pollFd.size(); ++i)
 		{
-			if (pollFd[0].revents & POLLIN)
+			if (pollFd[i].revents & POLLIN)
 			{
-				handleCon();
-				pollFd[0].revents = 0;
-			}
-			else if (pollFd.size() > 1) // tmp pour test avec un client
-			{
-				while (i_fd < pollFd.size())
+				// CAS 1 : Nouveaute sur le socket serveur -> accept()
+				if (pollFd[i].fd == this->_socketServer)
 				{
-					if (pollFd[i_fd].revents & POLLIN)
-						break ;
-					i_fd++;
+					handleCon();
 				}
+				// CAS 2 : Nouveaute sur un socket client -> recv()
+				else
+				{
+					int clientFd = pollFd[i].fd;
+					std::string& buffClient = clients.getClientInfo()[clientFd].buff;
 
-				std::string& buffClient = clients.getClientInfo()[pollFd[i_fd].fd].buff;
-				readSocketFd(buffClient, pollFd[i_fd]);
-
-				handleCmds(buffClient, pollFd[i_fd].fd);
-				pollFd[i_fd].revents = 0;
+					// Si readSocketFd renvoie true (client toujours actif)
+					if (readSocketFd(buffClient, pollFd[i]))
+					{
+						handleCmds(buffClient, clientFd);
+					}
+					else
+					{
+						// Le client suppr du vector dans removeClient !
+						// On decremente i pour ne pas sauter le client suivant dans la boucle for
+						--i;
+					}
+				}
 			}
-			actions++;
 		}
 	}
 }
@@ -164,66 +144,3 @@ void Server::startServer()
 	std::cout << "Server listening" << std::endl;
 	handlePoll();
 }
-
-/*void	Server::initCommands()
-{
-	_commands["NICK"] = &Server::execNick;
-	_commands["JOIN"] = &Server::execJoin;
-	_commands["PRIVMSG"] = &Server::execPrivmsg;
-	_commands["PASS"] = &Server::execPass;
-	// + plus tard;
-}
-
-void	Server::routeCommand(Client& sender, const Message& msg)
-{
-	std::string cmd = msg.getCommand();
-
-	std::map<std::string, CmdFunc>::iterator it = _commands.find(cmd);
-	if (it != _commands.end())
-	{
-		CmdFunc func = it->second;
-		(this->*func)(sender, msg);
-	}
-	else
-	{
-		std::cout << "Unknown command : " << cmd << std::endl;
-	}
-}*/
-
-/*void	Server::execNick(Client& sender, const Message& msg)
-{
-	std::cout << "[execNick] EXEC" << std::endl;
-	if (msg.getParams().empty())
-	{
-		std::cout << "[execNick] Error : No nickname" << std::endl;
-		//sendReply(sender, ERR_NONICKNAMEGIVEN(sender.getNickname()));
-		return;
-	}
-	std::string newNick = msg.getParams()[0];
-	// Quand Nickname deja use
-	//if (isNickInUse(newNick)) //fonction de verif
-	//{
-	//	sendReply(sender, ERR_NICKNAMEINUSE(sender.getNickname(), newNick));
-	//	return;
-	//}
-	sender.setNickname(newNick);
-	std::cout << "[execNick] Nickname of " << newNick << " change to : " << sender.getNickname() << std::endl;
-}
-
-void	Server::execJoin(Client& sender, const Message& msg)
-{
-	(void)sender; (void)msg;
-std::cout << "[execJoin] try to join " << (msg.getParams().empty() ? "nothing" : msg.getParams()[0]) << std::endl;	// Create or join channel
-}
-
-void	Server::execPrivmsg(Client& sender, const Message& msg)
-{
-	(void)sender; (void)msg;
-	std::cout << "[execPrivmsg] send msg !" << std::endl;
-}
-
-void	Server::execPass(Client& sender, const Message& msg)
-{
-	(void)sender; (void)msg;
-	std::cout << "[execPass] mdp" << std::endl;
-}*/

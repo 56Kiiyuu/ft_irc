@@ -6,6 +6,7 @@
 
 CommandManager::CommandManager()
 {
+	_commands["CAP"] = &cmdCap;
 	_commands["PASS"] = &cmdPass;
 	_commands["NICK"] = &cmdNick;
 	_commands["USER"] = &cmdUser;
@@ -16,15 +17,19 @@ CommandManager::CommandManager()
 CommandManager::~CommandManager()
 {}
 
-void CommandManager::routeCommand(Server& server, Client& sender, const Message& msg) {
+void CommandManager::routeCommand(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg)
+{
 	std::string cmd = msg.getCommand();
 
 	std::map<std::string, CmdHandler>::iterator it = _commands.find(cmd);
-	if (it != _commands.end()) {
+	if (it != _commands.end())
+	{
 		CmdHandler handler = it->second;
-		handler(server, sender, msg); 
-	} else {
+		handler(server, sender, socketFd, msg);
+	}
+	else
+	{
 		std::cout << "Commande inconnue : " << cmd << std::endl;
-		// Optionnel : sendReply(...) ERR_UNKNOWNCOMMAND (421)
+		// sendReply(...) ERR_UNKNOWNCOMMAND (421)
 	}
 }

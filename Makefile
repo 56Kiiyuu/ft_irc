@@ -1,9 +1,16 @@
 NAME = ircserv
 INC = includes
 SRCS =	srcs/main.cpp \
-		srcs/Parsing.cpp \
+		srcs/Message.cpp \
 		srcs/Server.cpp \
-		srcs/Client.cpp
+		srcs/Client.cpp \
+		srcs/commands/Command.cpp \
+		srcs/commands/Cap.cpp \
+		srcs/commands/Pass.cpp \
+		srcs/commands/Nick.cpp \
+		srcs/commands/User.cpp \
+		srcs/commands/Join.cpp \
+		srcs/commands/Privmsg.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 CPPFLAGS = -Wall -Werror -Wextra -std=c++98 -g -I$(INC)
