@@ -3,9 +3,25 @@
 #include "Client.hpp"
 #include "Message.hpp"
 
+#include <signal.h>
+
+Server server;
+
+void	handler(int sig, siginfo_t *info, void *context)
+{
+	(void)info;
+	(void)context;
+
+	if (sig == SIGINT)
+	{
+		server.getRun() = 0;
+	}
+}
+
+
 int main() {
 	//create serv
-	Server server;
+	/*Server server;
 	// fake client
 	Client dummyClient;
 	std::cout << "Base Nickname : " << dummyClient.getNickname() << std::endl;
@@ -24,6 +40,15 @@ int main() {
 		Message msg(testCommands[i]);
 		// routing to the correct cmd
 		server.routeCommand(dummyClient, msg);
-	}
+	}*/
+
+	struct sigaction sa;
+
+	sa.sa_sigaction = handler;
+	sa.sa_flags = SA_SIGINFO;
+	sigemptyset(&sa.sa_mask);
+	sigaction(SIGINT, &sa, NULL);
+
+	server.startServer();
 	return 0;
 }

@@ -2,19 +2,40 @@
 #define CLIENT_HPP
 
 #include <string>
+#include <poll.h>
+#include <vector>
+#include <map>
+#include <iostream>
+
+#include <netdb.h>
 
 //TEMPORAIRE
 class Client
 {
-	private:
-		std::string _nickname;
-
 	public:
-		Client() : _nickname("Guest") {}
-		~Client() {}
+		Client();
+		Client(int serverSocket, sockaddr_in addrServer);
+		~Client();
 
-		void setNickname(const std::string& nick) { _nickname = nick; }
-		const std::string& getNickname() const { return _nickname; }
+		typedef struct ClientInfo
+		{
+			std::string nickname;
+			std::string user;
+			std::string realname;
+			struct sockaddr_in _addrClient;
+			socklen_t addrClientSize;
+			std::string buff;
+		} ClientInfo;
+
+		void addNewClient(int fd, struct sockaddr_in addrClient);
+		void removeClient(int fd);
+		std::map<int, ClientInfo>& getClientInfo();
+		std::vector<struct pollfd>& getPollFd();
+
+	private:
+		std::vector<struct pollfd> _fd;
+		std::map<int, ClientInfo> _clientInfo;
+
 };
 
 #endif
