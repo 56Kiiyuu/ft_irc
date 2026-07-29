@@ -19,12 +19,13 @@ class Client
 
 		typedef struct ClientInfo
 		{
-			std::string nickname;
-			std::string user;
-			std::string realname;
-			struct sockaddr_in _addrClient;
-			socklen_t addrClientSize;
-			std::string buff;
+			std::string			nickname;
+			std::string			user;
+			std::string			realname;
+			struct sockaddr_in	_addrClient;
+			socklen_t			addrClientSize;
+			std::string			buff;
+			bool				isRegistered;
 		} ClientInfo;
 
 		void addNewClient(int fd, struct sockaddr_in addrClient);

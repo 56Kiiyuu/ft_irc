@@ -6,7 +6,7 @@
 /*   By: kevlim <kevlim@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/29 13:09:48 by kevlim            #+#    #+#             */
-/*   Updated: 2026/07/29 14:33:03 by kevlim           ###   ########.fr       */
+/*   Updated: 2026/07/29 17:22:49 by kevlim           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,12 +30,20 @@ void	cmdUser(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 		return;
 	}
 
+	if (sender.isRegistered)
+	{
+		std::cout << "[USER] Erreur: Client deja enregistre" << std::endl;
+		// ERR_ALREADYREGISTRED (462)
+		return;
+	}
 	sender.user = msg.getParams()[0];
 	sender.realname = msg.getParams()[3];
 
 	std::cout << "[USER] User enregistre : " << sender.user << " (" << sender.realname << ")" << std::endl;
 	if (!sender.nickname.empty() && !sender.user.empty())
 	{
+		sender.isRegistered = true;
+
 		std::string welcome = ":server 001 " + sender.nickname + " :Welcome to the IRC Network " + sender.nickname + "\r\n";
 		send(socketFd, welcome.c_str(), welcome.length(), 0);
 		std::cout << "[SERVER] Sent RPL_WELCOME (001) to " << sender.nickname << std::endl;
