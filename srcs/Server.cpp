@@ -94,7 +94,6 @@ void Server::handleCmds(std::string& buffClient, int socketFd, std::string& nick
 		else if (line.find("USER") == 0)
 		{
 			std::string msgserv = ":server 001 " + nick + " :Welcome to my IRC Server \r\n";
-			// char msgserv2[50] = ":server 001 gchalmel :Welcome to my IRC Server \r\n";
 			send(socketFd, msgserv.c_str(), msgserv.size(), 0);
 			std::cout << "Server: " << msgserv << std::endl;
 		}
