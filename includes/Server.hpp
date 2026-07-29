@@ -44,6 +44,7 @@ class Server
 		~Server();
 
 		void	startServer();
+		Client&	getClients();
 		int&		getRun();
 };
 
