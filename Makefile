@@ -10,7 +10,9 @@ SRCS =	srcs/main.cpp \
 		srcs/commands/Nick.cpp \
 		srcs/commands/User.cpp \
 		srcs/commands/Join.cpp \
-		srcs/commands/Privmsg.cpp
+		srcs/commands/Privmsg.cpp \
+		srcs/commands/Mode.cpp \
+		srcs/commands/Ping.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 CPPFLAGS = -Wall -Werror -Wextra -std=c++98 -g -I$(INC)

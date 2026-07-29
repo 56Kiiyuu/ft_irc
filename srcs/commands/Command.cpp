@@ -12,6 +12,8 @@ CommandManager::CommandManager()
 	_commands["USER"] = &cmdUser;
 	_commands["JOIN"] = &cmdJoin;
 	_commands["PRIVMSG"] = &cmdPrivmsg;
+	_commands["MODE"] = &cmdMode;
+	_commands["PING"] = &cmdPing;
 }
 
 CommandManager::~CommandManager()

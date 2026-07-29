@@ -144,3 +144,8 @@ void Server::startServer()
 	std::cout << "Server listening" << std::endl;
 	handlePoll();
 }
+
+Client& Server::getClients()
+{
+	return this->clients;
+}
