@@ -13,7 +13,7 @@ void Channels::joinChannels(int fd)
 
 void Channels::sendMsg(int msgFd, int serverFd, std::string msg)
 {
-	int i = 0;
+	std::size_t i = 0;
 
 	while (i < owner.size())
 	{

@@ -157,7 +157,8 @@ void Server::startServer()
 	handlePoll();
 }
 
-int& Server::getRun()
+
+Client&	Server::getClients()
 {
-	return this->_run;
+	return this->clients;
 }
