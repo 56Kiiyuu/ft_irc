@@ -26,6 +26,8 @@ class Server
 		struct sockaddr_in _addrServer;
 		struct sockaddr_in _addrClient;
 
+		int _run;
+
 		Client clients;
 		CommandManager	_cmdManager;
 
@@ -42,7 +44,7 @@ class Server
 		~Server();
 
 		void	startServer();
-		Client&	getClients();
+		int&		getRun();
 };
 
 #endif
