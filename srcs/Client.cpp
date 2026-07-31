@@ -36,14 +36,18 @@ void Client::addNewClient(int fd, struct sockaddr_in addrClient)
 	tmpFd.revents = 0;
 	tmpFd.events = POLLIN;
 
-	/*ci.nickname = nickname;
-	ci.user = user;*/
+	ci.fd = fd;
+	ci.nickname = "";
+	ci.user = "";
+	ci.realname = "";
+	ci.buff = "";
+	ci.isRegistered = false;
 	ci._addrClient = addrClient;
 	ci.addrClientSize = sizeof(addrClient);
 
 
 	this->_fd.push_back(tmpFd);
-	this->_clientInfo.insert(std::pair<int, ClientInfo>(fd, ci));
+	this->_clientInfo[fd] = ci;
 }
 
 void Client::removeClient(int fd)
@@ -57,7 +61,7 @@ void Client::removeClient(int fd)
 		if (it->fd == fd)
 		{
 			this->_fd.erase(it);
-			break;
+			return;
 		}
 	}
 }

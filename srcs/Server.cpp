@@ -63,15 +63,9 @@ bool Server::readSocketFd(std::string& buff, struct pollfd& pollFd)
 		buff.append(tmpBuffChar, n);
 		return true; //donnees recu succes
 	}
-	else if (n == 0 || (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK))
-	{
-		std::cout << "[-] Client FD " << pollFd.fd << " deconnecte." << std::endl;
-
-		close(pollFd.fd);
-		clients.removeClient(pollFd.fd);
-		return false; // Le client est deco
-	}
-	return true;
+	std::cout << "[-] Client FD " << pollFd.fd << " deconnecte." << std::endl;
+	close(pollFd.fd);
+	return false;
 }
 
 void Server::handleCon()
@@ -142,6 +136,7 @@ void Server::handlePoll()
 					{
 						// Le client suppr du vector dans removeClient !
 						// On decremente i pour ne pas sauter le client suivant dans la boucle for
+						clients.removeClient(clientFd);
 						--i;
 					}
 				}
@@ -171,4 +166,26 @@ void Server::startServer()
 Client& Server::getClients()
 {
 	return this->clients;
+}
+
+bool Server::isNickInUse(const std::string& nick)
+{
+	std::map<int, Client::ClientInfo>& clientsMap = this->clients.getClientInfo();
+
+	for (std::map<int, Client::ClientInfo>::iterator it = clientsMap.begin(); it != clientsMap.end(); ++it)
+	{
+		if (it->second.nickname == nick)
+			return true;
+	}
+	return false;
+}
+
+const std::string& Server::getPassword() const
+{
+	return this->_password;
+}
+
+void Server::setPassword(const std::string& password)
+{
+	this->_password = password;
 }

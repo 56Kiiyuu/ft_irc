@@ -19,7 +19,7 @@ void	handler(int sig, siginfo_t *info, void *context)
 }
 
 
-int main() {
+int main(int argc, char **argv) {
 	//create serv
 	/*Server server;
 	// fake client
@@ -42,6 +42,14 @@ int main() {
 		server.routeCommand(dummyClient, msg);
 	}*/
 
+	if (argc != 3)
+	{
+		std::cerr << "Usage: ./ircserv <port> <password>" << std::endl;
+		return 1;
+	}
+
+	std::string password = argv[2];
+	server.setPassword(password);
 	struct sigaction sa;
 
 	sa.sa_sigaction = handler;
