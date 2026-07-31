@@ -6,7 +6,7 @@
 /*   By: kevlim <kevlim@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/29 13:01:42 by kevlim            #+#    #+#             */
-/*   Updated: 2026/07/31 15:09:45 by kevlim           ###   ########.fr       */
+/*   Updated: 2026/07/31 16:07:19 by kevlim           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,14 +23,15 @@ static bool	isValidNickname(const std::string& nick)
 	// 9 chars maximum
 	if (nick.empty() || nick.length() > 9)
 		return false;
-	// forbidden to start with digit or invalid char
-	if (std::isdigit(nick[0]) || nick[0] == '-' || nick[0] == '#' || nick[0] == ':')
+	// allowed to start
+	std::string allowedFirst = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]\\`^{}|_";
+	if (allowedFirst.find(nick[0]) == std::string::npos)
 		return false;
-	//valid chars
-	std::string validChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-[]{\\}\\|";
+
+	std::string allowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789[]\\`^{}|_-";
 	for (size_t i = 0; i < nick.length(); ++i)
 	{
-		if (validChars.find(nick[i]) == std::string::npos)
+		if (allowedChars.find(nick[i]) == std::string::npos)
 			return false;
 	}
 	return true;
@@ -39,6 +40,13 @@ static bool	isValidNickname(const std::string& nick)
 void	cmdNick(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg)
 {
 	std::string clientNick = sender.nickname.empty() ? "*" : sender.nickname;
+
+	if (!sender.hasPass)
+	{
+		std::string err = ERR_NOTREGISTERED(sender.nickname.empty() ? "*" : sender.nickname);
+		send(socketFd, err.c_str(), err.length(), 0);
+		return;
+	}
 
 	//check if nickname
 	if (msg.getParams().empty() || msg.getParams()[0].empty())

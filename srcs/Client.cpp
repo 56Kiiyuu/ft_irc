@@ -42,6 +42,7 @@ void Client::addNewClient(int fd, struct sockaddr_in addrClient)
 	ci.realname = "";
 	ci.buff = "";
 	ci.isRegistered = false;
+	ci.hasPass = false;
 	ci._addrClient = addrClient;
 	ci.addrClientSize = sizeof(addrClient);
 

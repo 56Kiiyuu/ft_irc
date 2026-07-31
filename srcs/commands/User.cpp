@@ -6,7 +6,7 @@
 /*   By: kevlim <kevlim@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/29 13:09:48 by kevlim            #+#    #+#             */
-/*   Updated: 2026/07/31 15:09:31 by kevlim           ###   ########.fr       */
+/*   Updated: 2026/07/31 16:07:08 by kevlim           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,13 @@ void	cmdUser(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 		std::string err = ERR_NEEDMOREPARAMS(clientNick, "USER");
 		send(socketFd, err.c_str(), err.length(), 0);
 		std::cout << "[USER] ERR_NEEDMOREPARAMS (461) send to FD" << std::endl;
+		return;
+	}
+
+	if (!sender.hasPass)
+	{
+		std::string err = ERR_NOTREGISTERED(sender.nickname.empty() ? "*" : sender.nickname);
+		send(socketFd, err.c_str(), err.length(), 0);
 		return;
 	}
 

@@ -6,7 +6,7 @@
 /*   By: kevlim <kevlim@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/29 12:50:44 by kevlim            #+#    #+#             */
-/*   Updated: 2026/07/31 15:10:22 by kevlim           ###   ########.fr       */
+/*   Updated: 2026/07/31 15:51:34 by kevlim           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@ void	cmdPass(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 		std::string err = ERR_NEEDMOREPARAMS(clientNick, "PASS");
 		send(socketFd, err.c_str(), err.length(), 0);
 		std::cout << "[PASS] ERR_NEEDMOREPARAMS (461) envoye a FD " << socketFd << std::endl;
+		sender.hasPass = false;
 		return;
 	}
 
@@ -52,5 +53,6 @@ void	cmdPass(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 		sender.hasPass = false; // mdp invalid
 		return;
 	}
+	sender.hasPass = true;
 	std::cout << "[PASS] Mdp recu : " << input_password << std::endl;
 }
