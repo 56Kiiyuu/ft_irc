@@ -17,6 +17,8 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#include <Channels.hpp>
+
 class Server
 {
 	private:
@@ -33,6 +35,8 @@ class Server
 		Client clients;
 		CommandManager	_cmdManager;
 
+		std::vector<Channels> channnels;
+
 		// utils
 		std::string	rnl(std::string& buff);
 		void 		handlePoll();
@@ -48,6 +52,7 @@ class Server
 		Client&				getClients();
 		bool				isNickInUse(const std::string& nick);
 		const std::string&	getPassword() const;
+    std::vector<Channels>&	getChannels();
 		void				setPassword(const std::string& password);
 		int&				getRun();
 };

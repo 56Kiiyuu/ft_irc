@@ -12,7 +12,8 @@ SRCS =	srcs/main.cpp \
 		srcs/commands/Join.cpp \
 		srcs/commands/Privmsg.cpp \
 		srcs/commands/Mode.cpp \
-		srcs/commands/Ping.cpp
+		srcs/commands/Ping.cpp \
+		srcs/Channels.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 CPPFLAGS = -Wall -Werror -Wextra -std=c++98 -g -I$(INC)
