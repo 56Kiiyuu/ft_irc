@@ -38,23 +38,24 @@ class Server
 		std::vector<Channels> channnels;
 
 		// utils
-		std::string	rnl(std::string& buff);
-		void 		handlePoll();
-		void 		handleCon();
-		bool 		readSocketFd(std::string& buff, struct pollfd& pollFd);
-		void 		handleCmds(std::string& buffClient, int socketFd);
+		std::string				rnl(std::string& buff);
+		void 					handlePoll();
+		void 					handleCon();
+		bool 					readSocketFd(std::string& buff, struct pollfd& pollFd);
+		void 					handleCmds(std::string& buffClient, int socketFd);
 		// + plus tard;
 	public:
 		Server();
 		~Server();
 
-		void				startServer();
-		Client&				getClients();
-		bool				isNickInUse(const std::string& nick);
-		const std::string&	getPassword() const;
-    std::vector<Channels>&	getChannels();
-		void				setPassword(const std::string& password);
-		int&				getRun();
+		void					startServer();
+		Client&					getClients();
+		bool					isNickInUse(const std::string& nick);
+		const std::string&		getPassword() const;
+		std::vector<Channels>&	getChannels();
+		void					setPassword(const std::string& password);
+		int&					getRun();
+		int						getServerSocket();
 };
 
 #endif

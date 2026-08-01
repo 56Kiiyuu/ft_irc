@@ -195,3 +195,8 @@ void Server::setPassword(const std::string& password)
 {
 	this->_password = password;
 }
+
+int Server::getServerSocket()
+{
+	return this->_socketServer;
+}
