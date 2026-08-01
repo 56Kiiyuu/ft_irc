@@ -17,6 +17,8 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#include <Channels.hpp>
+
 class Server
 {
 	private:
@@ -31,6 +33,8 @@ class Server
 		Client clients;
 		CommandManager	_cmdManager;
 
+		std::vector<Channels> channnels;
+
 		// utils
 		std::string	rnl(std::string& buff);
 		void handlePoll();
@@ -44,7 +48,10 @@ class Server
 		~Server();
 
 		void	startServer();
+		Client&	getClients();
 		int&		getRun();
+		std::vector<Channels>&	getChannels();
+		int getServerSocket();
 };
 
 #endif
