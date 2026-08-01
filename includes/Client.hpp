@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 #include <iostream>
+#include <cstring>
 
 #include <netdb.h>
 
@@ -19,12 +20,28 @@ class Client
 
 		typedef struct ClientInfo
 		{
-			std::string nickname;
-			std::string user;
-			std::string realname;
-			struct sockaddr_in _addrClient;
-			socklen_t addrClientSize;
-			std::string buff;
+			int					fd;
+			std::string			nickname;
+			std::string			user;
+			std::string			realname;
+			std::string			buff;
+			struct sockaddr_in	_addrClient;
+			socklen_t			addrClientSize;
+			bool				isRegistered;
+			bool				hasPass;
+
+			ClientInfo()
+				: fd(-1),
+				nickname(""),
+				user(""),
+				realname(""),
+				buff(""),
+				addrClientSize(sizeof(_addrClient)),
+				isRegistered(false),
+				hasPass(false)
+			{
+				std::memset(&_addrClient, 0, sizeof(_addrClient));
+			}
 		} ClientInfo;
 
 		void addNewClient(int fd, struct sockaddr_in addrClient);

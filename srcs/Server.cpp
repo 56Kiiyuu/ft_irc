@@ -37,13 +37,24 @@ std::vector<Channels>&	Server::getChannels()
 std::string	Server::rnl(std::string& buff)
 {
 	std::string::size_type pos = buff.find("\r\n");
-	if (pos != std::string::npos)
+	size_t delLen = 2;
+	// si nc envoie que \n
+	if (pos == std::string::npos)
 	{
-		std::string retStr = buff.substr(0, pos);
-		buff.erase(0, pos + 2);
-		return retStr;
+		pos = buff.find("\n");
+		delLen = 1;
 	}
-	return "";
+	// si aucun saut de ligne (cmd incomplet)
+	if (pos == std::string::npos)
+		return "";
+	// extraire la cmd
+	std::string line = buff.substr(0, pos);
+	buff.erase(0, pos + delLen);
+
+	// suppr \r (^M) en fin de ligne
+	if (!line.empty() && line[line.length() - 1] == '\r')
+		line.erase(line.length() - 1);
+	return line;
 }
 
 bool Server::readSocketFd(std::string& buff, struct pollfd& pollFd)
@@ -57,15 +68,9 @@ bool Server::readSocketFd(std::string& buff, struct pollfd& pollFd)
 		buff.append(tmpBuffChar, n);
 		return true; //donnees recu succes
 	}
-	else if (n == 0 || (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK))
-	{
-		std::cout << "[-] Client FD " << pollFd.fd << " deconnecte." << std::endl;
-
-		close(pollFd.fd);
-		clients.removeClient(pollFd.fd);
-		return false; // Le client est deco
-	}
-	return true;
+	std::cout << "[-] Client FD " << pollFd.fd << " deconnecte." << std::endl;
+	close(pollFd.fd);
+	return false;
 }
 
 void Server::handleCon()
@@ -81,14 +86,19 @@ void Server::handleCon()
 
 void Server::handleCmds(std::string& buffClient, int socketFd)
 {
-	std::string line = rnl(buffClient);
-	while (!line.empty())
+	while (true)
 	{
-		Message msg(line);
-		Client::ClientInfo& sender = clients.getClientInfo()[socketFd];
-		_cmdManager.routeCommand(*this, sender, socketFd, msg);
+		std::string line = rnl(buffClient);
+		// si plus de ligne avec \n ou \r\n = sort
+		if (line.empty() && buffClient.find("\n") == std::string::npos)
+			break;
+		// si ligne vide = saute
+		if (line.empty() || line.find_first_not_of(" \t\r\n") == std::string::npos)
+			continue;
 
-		line = rnl(buffClient);
+		Client::ClientInfo& sender = clients.getClientInfo()[socketFd];
+		Message msg(line);
+		_cmdManager.routeCommand(*this, sender, socketFd, msg);
 	}
 }
 
@@ -131,6 +141,7 @@ void Server::handlePoll()
 					{
 						// Le client suppr du vector dans removeClient !
 						// On decremente i pour ne pas sauter le client suivant dans la boucle for
+						clients.removeClient(clientFd);
 						--i;
 					}
 				}
@@ -163,7 +174,24 @@ Client&	Server::getClients()
 	return this->clients;
 }
 
-int Server::getServerSocket()
+bool Server::isNickInUse(const std::string& nick)
 {
-	return this->_socketServer;
+	std::map<int, Client::ClientInfo>& clientsMap = this->clients.getClientInfo();
+
+	for (std::map<int, Client::ClientInfo>::iterator it = clientsMap.begin(); it != clientsMap.end(); ++it)
+	{
+		if (it->second.nickname == nick)
+			return true;
+	}
+	return false;
+}
+
+const std::string& Server::getPassword() const
+{
+	return this->_password;
+}
+
+void Server::setPassword(const std::string& password)
+{
+	this->_password = password;
 }

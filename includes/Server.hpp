@@ -23,6 +23,8 @@ class Server
 {
 	private:
 		// peut etre a supr (a voir par la suite)
+		std::string _password;
+
 		int _socketServer;
 		int _socketClient;
 		struct sockaddr_in _addrServer;
@@ -37,21 +39,22 @@ class Server
 
 		// utils
 		std::string	rnl(std::string& buff);
-		void handlePoll();
-		void handleCon();
-		bool readSocketFd(std::string& buff, struct pollfd& pollFd);
-		void handleCmds(std::string& buffClient, int socketFd);
-
+		void 		handlePoll();
+		void 		handleCon();
+		bool 		readSocketFd(std::string& buff, struct pollfd& pollFd);
+		void 		handleCmds(std::string& buffClient, int socketFd);
 		// + plus tard;
 	public:
 		Server();
 		~Server();
 
-		void	startServer();
-		Client&	getClients();
-		int&		getRun();
-		std::vector<Channels>&	getChannels();
-		int getServerSocket();
+		void				startServer();
+		Client&				getClients();
+		bool				isNickInUse(const std::string& nick);
+		const std::string&	getPassword() const;
+    std::vector<Channels>&	getChannels();
+		void				setPassword(const std::string& password);
+		int&				getRun();
 };
 
 #endif

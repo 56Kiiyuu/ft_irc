@@ -15,7 +15,9 @@
 #include "Client.hpp"
 #include "Message.hpp"
 #include "Channels.hpp"
+#include "NumericReplies.hpp"
 #include <iostream>
+#include <sys/socket.h>
 
 void cmdJoin(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg)
 {
@@ -25,6 +27,14 @@ void cmdJoin(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 
 	std::vector<Channels>& channels = server.getChannels();
 
+
+	if (!sender.isRegistered)
+	{
+		std::string clientNick = sender.nickname.empty() ? "*" : sender.nickname;
+		std::string err = ERR_NOTREGISTERED(clientNick);
+		send(socketFd, err.c_str(), err.length(), 0);
+		return;
+	}
 	std::cout << "[JOIN] Tentative de join sur le channel : "
 			  << (msg.getParams().empty() ? "aucun" : msg.getParams()[0]) << std::endl;
 	if (msg.getParams()[0][0] == '#')
