@@ -30,20 +30,17 @@ void cmdMode(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 
 
 	std::string modes = msg.getParams()[1];
-	bool minus = false;
 	bool plus = false;
-	int indexArgs = -1;
+	int indexArgs = 2;
 	for (int i=0 ; i < modes.size() ; i++)
 	{
 		if (modes[i] == '+')
 		{
 			plus = true;
-			minus = false;
 			continue;
 		}
 		if (modes[i] == '-')
 		{
-			minus = true;
 			plus = false;
 			continue;
 		}
@@ -55,7 +52,7 @@ void cmdMode(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 				server.getChannels()[indexChannel].setNeedInvite(true);
 			else
 				server.getChannels()[indexChannel].setNeedInvite(false);
-				indexArgs++;
+			indexArgs++;
 			continue;
 		case 't':
 			if (plus == true)
@@ -65,24 +62,23 @@ void cmdMode(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 			indexArgs++;
 			continue;
 		case 'k':
-			indexArgs++;
 			if (plus == true)
 			{
 				server.getChannels()[indexChannel].setNeedPassword(true);
-				server.getChannels()[indexChannel].setPassword(msg.getParams()[indexArgs + 2]);
+				server.getChannels()[indexChannel].setPassword(msg.getParams()[indexArgs]);
 			}
 			else
-				server.getChannels()[indexChannel].setNeedPassword(false);
+			server.getChannels()[indexChannel].setNeedPassword(false);
+			indexArgs++;
 			continue;
 		case 'o':
-			indexArgs++;
 			if (plus == true)
 			{
 				std::vector<int> user = server.getChannels()[indexChannel].getUser();
 				int indexClient = -1;
 				for (int i=0 ; i < user.size() ; i++)
 				{
-					if (server.getClients().getClientInfo()[user[i]].nickname == msg.getParams()[indexArgs + 2])
+					if (server.getClients().getClientInfo()[user[i]].nickname == msg.getParams()[indexArgs])
 					{
 						indexClient = i;
 						break ;
@@ -98,7 +94,7 @@ void cmdMode(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 				int indexClient = -1;
 				for (int i=0 ; i < owner.size() ; i++)
 				{
-					if (server.getClients().getClientInfo()[owner[i]].fd == owner[i])
+					if (server.getClients().getClientInfo()[owner[i]].nickname == msg.getParams()[indexArgs])
 					{
 						indexClient = i;
 						break ;
@@ -108,20 +104,29 @@ void cmdMode(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 					continue;
 				server.getChannels()[indexChannel].deleteOperator(indexClient);
 			}
+			indexArgs++;
 			continue;
 		case 'l':
-			indexArgs++;
 			if (plus == true)
-				server.getChannels()[indexChannel].setHasUserLimit(true, std::atol(msg.getParams()[indexArgs + 2].c_str()));
+				server.getChannels()[indexChannel].setHasUserLimit(true, std::atol(msg.getParams()[indexArgs].c_str()));
 			else
 				server.getChannels()[indexChannel].setHasUserLimit(false, 0);
+			indexArgs++;
 			continue;
 		default:
 			continue;
 		}
 
 	}
+	std::string prefix = ":" + sender.nickname + "!" + sender.user + "@127.0.0.1";
+	std::string formattedMsg = prefix + " MODE ";
 
-
+	for (int i=0 ; i < msg.getParams().size() ; i++)
+	{
+		formattedMsg += msg.getParams()[i] + " ";
+	}
+	formattedMsg += "\r\n";
+	// send(targetFd, formattedMsg.c_str(), formattedMsg.length(), 0);
+	server.getChannels()[indexChannel].sendMsg(socketFd, server.getServerSocket(), formattedMsg);
 	// on laisse vide pr l'instant
 }
