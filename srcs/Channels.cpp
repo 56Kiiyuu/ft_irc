@@ -4,6 +4,11 @@ Channels::Channels(int ownerFd, std::string name)
 {
 	this->owner.push_back(ownerFd);
 	this->name = name;
+	this->restrictedTopic = false;
+	this->needInvite = false;
+	this->needPassword = false;
+	this->hasUserLimit = false;
+	this->limitUser = 0;
 }
 
 void Channels::joinChannels(int fd)
@@ -50,4 +55,71 @@ Channels::~Channels()
 std::string Channels::getName()
 {
 	return this->name;
+}
+
+bool Channels::getNeedInvite()
+{
+	return this->needInvite;
+}
+
+void Channels::setNeedInvite(bool _bool)
+{
+	this->needInvite = _bool;
+}
+
+bool Channels::getRestrictedTopic()
+{
+	return this->restrictedTopic;
+}
+
+void Channels::setRestrictedTopic(bool _bool)
+{
+	this->restrictedTopic = _bool; 
+}
+
+bool Channels::getNeedPassword()
+{
+	return this->needPassword;
+}
+void Channels::setNeedPassword(bool _bool)
+{
+	this->needPassword = _bool;
+}
+
+void Channels::setPassword(std::string password)
+{
+	this->password = password;
+}
+
+std::vector<int> Channels::getUser()
+{
+	return this->user;
+}
+
+std::vector<int> Channels::getOwner()
+{
+	return this->owner;
+}
+
+void Channels::addNewOperator(int i)
+{
+	this->owner.push_back(this->user[i]);
+	this->user.erase (this->user.begin()+i);
+}
+
+void Channels::deleteOperator(int i)
+{
+	this->user.push_back(this->owner[i]);
+	this->owner.erase (this->owner.begin()+i);
+}
+
+bool Channels::getHasUserLimit()
+{
+	return this->hasUserLimit;
+}
+
+void Channels::setHasUserLimit(bool _bool, int limitUser)
+{
+	this->hasUserLimit = _bool;
+	this->limitUser = limitUser;
 }
