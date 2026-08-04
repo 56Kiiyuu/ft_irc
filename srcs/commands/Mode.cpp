@@ -60,14 +60,14 @@ void cmdMode(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 				server.getChannels()[indexChannel].setNeedInvite(true);
 			else
 				server.getChannels()[indexChannel].setNeedInvite(false);
-			indexArgs++;
+			// indexArgs++;
 			continue;
 		case 't':
 			if (plus == true)
 				server.getChannels()[indexChannel].setRestrictedTopic(true);
 			else
 				server.getChannels()[indexChannel].setRestrictedTopic(false);
-			indexArgs++;
+			// indexArgs++;
 			continue;
 		case 'k':
 			if (plus == true)
@@ -139,6 +139,6 @@ void cmdMode(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 
 	std::cout << "[MODE] Finish setup mode -> " << std::endl;
 	std::cout << "[MODE] " << formattedMsg << std::endl;
-	std::cout << "[MODE] i:" << server.getChannels()[indexChannel].getNeedInvite() << std::endl;
+	std::cout << "[MODE] i:" << server.getChannels()[indexChannel].getNeedInvite() << " k:" << server.getChannels()[indexChannel].getNeedPassword() << " Password:" << server.getChannels()[indexChannel].getNeedPassword() << std::endl;
 	// on laisse vide pr l'instant
 }
