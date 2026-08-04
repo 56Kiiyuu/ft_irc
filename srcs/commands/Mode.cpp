@@ -74,10 +74,10 @@ void cmdMode(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 			{
 				server.getChannels()[indexChannel].setNeedPassword(true);
 				server.getChannels()[indexChannel].setPassword(msg.getParams()[indexArgs]);
+				indexArgs++;
 			}
 			else
-			server.getChannels()[indexChannel].setNeedPassword(false);
-			indexArgs++;
+				server.getChannels()[indexChannel].setNeedPassword(false);
 			continue;
 		case 'o':
 			if (plus == true)
@@ -116,10 +116,12 @@ void cmdMode(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 			continue;
 		case 'l':
 			if (plus == true)
+			{
 				server.getChannels()[indexChannel].setHasUserLimit(true, std::atol(msg.getParams()[indexArgs].c_str()));
+				indexArgs++;
+			}
 			else
 				server.getChannels()[indexChannel].setHasUserLimit(false, 0);
-			indexArgs++;
 			continue;
 		default:
 			continue;
