@@ -119,11 +119,11 @@ void cmdMode(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 
 	}
 	std::string prefix = ":" + sender.nickname + "!" + sender.user + "@127.0.0.1";
-	std::string formattedMsg = prefix + " MODE ";
+	std::string formattedMsg = prefix + " MODE";
 
 	for (int i=0 ; i < msg.getParams().size() ; i++)
 	{
-		formattedMsg += msg.getParams()[i] + " ";
+		formattedMsg += " " + msg.getParams()[i];
 	}
 	formattedMsg += "\r\n";
 	// send(targetFd, formattedMsg.c_str(), formattedMsg.length(), 0);
