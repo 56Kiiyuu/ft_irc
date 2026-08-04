@@ -123,3 +123,13 @@ void Channels::setHasUserLimit(bool _bool, int limitUser)
 	this->hasUserLimit = _bool;
 	this->limitUser = limitUser;
 }
+
+bool Channels::isOp(int fd)
+{
+	for (std::size_t i=0 ; i < this->owner.size() ; i++)
+	{
+		if (fd == this->owner[i])
+			return 1;
+	}
+	return 0;
+}

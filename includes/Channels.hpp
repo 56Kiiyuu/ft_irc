@@ -47,6 +47,7 @@ class Channels
 		std::vector<int> getUser();
 		std::vector<int> getOwner();
 
+		bool isOp(int fd);
 
 
 		~Channels();

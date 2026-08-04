@@ -19,6 +19,7 @@ void cmdMode(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 		// ERR_NORECIPIENT (411)
 	}
 
+
 	std::string channel = msg.getParams()[0];
 	// std::vector<Channels>& channels = server.getChannels();
 	int indexChannel = -1;
@@ -34,6 +35,12 @@ void cmdMode(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 	if (indexChannel == -1)
 	{
 		std::cout << "Error index channel" << std::endl;
+		return ;
+	}
+
+	if (!server.getChannels()[indexChannel].isOp(sender.fd))
+	{
+		std::cout << "[MODE] Sender is not Operator so he cant change mode" << std::endl;
 		return ;
 	}
 
