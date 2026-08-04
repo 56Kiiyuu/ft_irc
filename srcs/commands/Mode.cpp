@@ -4,6 +4,9 @@
 #include "Message.hpp"
 #include <iostream>
 
+// a supr atol est interdit
+#include <cstdlib>
+
 void cmdMode(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg)
 {
 	(void)server;
@@ -17,9 +20,9 @@ void cmdMode(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 	}
 
 	std::string channel = msg.getParams()[0];
-	std::vector<Channels>& channels = server.getChannels();
+	// std::vector<Channels>& channels = server.getChannels();
 	int indexChannel;
-	for (int i=0 ; i < server.getChannels().size() ; i++)
+	for (std::size_t i=0 ; i < server.getChannels().size() ; i++)
 	{
 		if (server.getChannels()[i].getName() == channel)
 		{
@@ -32,7 +35,7 @@ void cmdMode(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 	std::string modes = msg.getParams()[1];
 	bool plus = false;
 	int indexArgs = 2;
-	for (int i=0 ; i < modes.size() ; i++)
+	for (std::size_t i=0 ; i < modes.size() ; i++)
 	{
 		if (modes[i] == '+')
 		{
@@ -76,7 +79,7 @@ void cmdMode(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 			{
 				std::vector<int> user = server.getChannels()[indexChannel].getUser();
 				int indexClient = -1;
-				for (int i=0 ; i < user.size() ; i++)
+				for (std::size_t i=0 ; i < user.size() ; i++)
 				{
 					if (server.getClients().getClientInfo()[user[i]].nickname == msg.getParams()[indexArgs])
 					{
@@ -92,7 +95,7 @@ void cmdMode(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 			{
 				std::vector<int> owner = server.getChannels()[indexChannel].getOwner();
 				int indexClient = -1;
-				for (int i=0 ; i < owner.size() ; i++)
+				for (std::size_t i=0 ; i < owner.size() ; i++)
 				{
 					if (server.getClients().getClientInfo()[owner[i]].nickname == msg.getParams()[indexArgs])
 					{
@@ -121,7 +124,7 @@ void cmdMode(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 	std::string prefix = ":" + sender.nickname + "!" + sender.user + "@127.0.0.1";
 	std::string formattedMsg = prefix + " MODE";
 
-	for (int i=0 ; i < msg.getParams().size() ; i++)
+	for (std::size_t i=0 ; i < msg.getParams().size() ; i++)
 	{
 		formattedMsg += " " + msg.getParams()[i];
 	}
