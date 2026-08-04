@@ -6,7 +6,7 @@
 /*   By: gabch <gabch@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/29 13:16:57 by kevlim            #+#    #+#             */
-/*   Updated: 2026/07/29 17:47:29 by gabch            ###   ########.fr       */
+/*   Updated: 2026/08/05 01:06:28 by gabch            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,19 @@ void cmdJoin(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 			{
 				if (channels[i].getName() == msg.getParams()[0])
 				{
+					if (channels[i].getNeedPassword())
+					{
+						if (msg.getParams().size() != 2)
+						{
+							std::cout << "[JOIN] Need password" << std::endl;
+							return ;
+						}
+						if (channels[i].getPassword() != msg.getParams()[1])
+						{
+							std::cout << "[JOIN] Bad password" << std::endl;
+							return ;
+						}
+					}
 					channels[i].joinChannels(socketFd);
 					std::cout << "Join channel: " << msg.getParams()[0] << std::endl;
 					return ;

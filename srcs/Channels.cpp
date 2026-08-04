@@ -133,3 +133,8 @@ bool Channels::isOp(int fd)
 	}
 	return 0;
 }
+
+std::string Channels::getPassword()
+{
+	return this->password;
+}

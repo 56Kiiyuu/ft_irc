@@ -38,6 +38,7 @@ class Channels
 		bool getNeedPassword();
 		void setNeedPassword(bool _bool);
 		void setPassword(std::string password);
+		std::string getPassword();
 		bool getHasUserLimit();
 		void setHasUserLimit(bool _bool, int limitUser);
 
