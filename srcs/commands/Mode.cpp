@@ -15,13 +15,13 @@ void cmdMode(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 	
 	if (msg.getParams().empty())
 	{
-		std::cout << "[MOODE] Erreur: Aucun Mode selectionner" << std::endl;
+		std::cout << "[MODE] Erreur: Aucun Mode selectionner" << std::endl;
 		// ERR_NORECIPIENT (411)
 	}
 
 	std::string channel = msg.getParams()[0];
 	// std::vector<Channels>& channels = server.getChannels();
-	int indexChannel;
+	int indexChannel = -1;
 	for (std::size_t i=0 ; i < server.getChannels().size() ; i++)
 	{
 		if (server.getChannels()[i].getName() == channel)
@@ -31,6 +31,11 @@ void cmdMode(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 		}
 	}
 
+	if (indexChannel == -1)
+	{
+		std::cout << "Error index channel" << std::endl;
+		return ;
+	}
 
 	std::string modes = msg.getParams()[1];
 	bool plus = false;
@@ -131,5 +136,9 @@ void cmdMode(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 	formattedMsg += "\r\n";
 	// send(targetFd, formattedMsg.c_str(), formattedMsg.length(), 0);
 	server.getChannels()[indexChannel].sendMsg(socketFd, server.getServerSocket(), formattedMsg);
+
+	std::cout << "[MODE] Finish setup mode -> " << std::endl;
+	std::cout << "[MODE] " << formattedMsg << std::endl;
+	std::cout << "[MODE] i:" << server.getChannels()[indexChannel].getNeedInvite() << std::endl;
 	// on laisse vide pr l'instant
 }
