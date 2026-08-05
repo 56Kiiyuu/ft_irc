@@ -1,5 +1,6 @@
 #include "Server.hpp"
 #include "Client.hpp"
+#include "Channels.hpp"
 #include "NumericReplies.hpp"
 #include <iostream>
 #include <unistd.h>
@@ -141,7 +142,7 @@ void Server::handlePoll()
 					{
 						// Le client suppr du vector dans removeClient !
 						// On decremente i pour ne pas sauter le client suivant dans la boucle for
-						clients.removeClient(clientFd);
+						this->disconnectClient(clientFd);
 						--i;
 					}
 				}
@@ -199,4 +200,49 @@ void Server::setPassword(const std::string& password)
 int Server::getServerSocket()
 {
 	return this->_socketServer;
+}
+
+//fonction pour deco les client
+void Server::disconnectClient(int clientFd)
+{
+	std::vector<Channels>& channels = this->getChannels();
+
+	//clear client de tous les channels
+	for (std::size_t i = 0; i < channels.size(); )
+	{
+		std::vector<int>& users = channels[i].getUser();
+		std::vector<int>& owners = channels[i].getOwner();
+
+		//retrait des users
+		for (std::vector<int>::iterator it = users.begin(); it != users.end(); )
+		{
+			if (*it == clientFd)
+				it = users.erase(it);
+			else
+				++it;
+		}
+
+		//retrait des owners / ops
+		for (std::vector<int>::iterator it = owners.begin(); it != owners.end(); )
+		{
+			if (*it == clientFd)
+				it = owners.erase(it);
+			else
+				++it;
+		}
+
+		// Supprimer le canal s'il n'y a plus personne
+		if (channels[i].getUser().empty() && channels[i].getOwner().empty())
+		{
+			channels.erase(channels.begin() + i);
+		}
+		else
+		{
+			i++;
+		}
+	}
+
+	//rm client et close son socket
+	close(clientFd);
+	this->clients.removeClient(clientFd);
 }

@@ -7,6 +7,7 @@
 #include "Command.hpp"
 #include "Message.hpp"
 #include "Client.hpp"
+#include "Channels.hpp"
 
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -56,6 +57,7 @@ class Server
 		void					setPassword(const std::string& password);
 		int&					getRun();
 		int						getServerSocket();
+		void					disconnectClient(int clientFd);
 };
 
 #endif

@@ -4,6 +4,7 @@ Channels::Channels(int ownerFd, std::string name)
 {
 	this->owner.push_back(ownerFd);
 	this->name = name;
+	this->topic = "";
 	this->restrictedTopic = false;
 	this->needInvite = false;
 	this->needPassword = false;
@@ -57,6 +58,16 @@ std::string Channels::getName()
 	return this->name;
 }
 
+std::string Channels::getTopic()
+{
+	return this->topic;
+}
+
+void Channels::setTopic(std::string topic)
+{
+	this->topic = topic;
+}
+
 bool Channels::getNeedInvite()
 {
 	return this->needInvite;
@@ -74,7 +85,7 @@ bool Channels::getRestrictedTopic()
 
 void Channels::setRestrictedTopic(bool _bool)
 {
-	this->restrictedTopic = _bool; 
+	this->restrictedTopic = _bool;
 }
 
 bool Channels::getNeedPassword()
@@ -91,12 +102,12 @@ void Channels::setPassword(std::string password)
 	this->password = password;
 }
 
-std::vector<int> Channels::getUser()
+std::vector<int>& Channels::getUser()
 {
 	return this->user;
 }
 
-std::vector<int> Channels::getOwner()
+std::vector<int>& Channels::getOwner()
 {
 	return this->owner;
 }
@@ -137,4 +148,9 @@ bool Channels::isOp(int fd)
 std::string Channels::getPassword()
 {
 	return this->password;
+}
+
+int Channels::getLimitUser()
+{
+	return this->limitUser;
 }

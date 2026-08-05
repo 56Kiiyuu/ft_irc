@@ -19,6 +19,7 @@ class Channels
 		std::vector<int> owner;
 		std::vector<int> user;
 		std::string name;
+		std::string topic;
 		std::vector<std::string> modes;
 		bool needInvite;
 		bool restrictedTopic;
@@ -39,20 +40,23 @@ class Channels
 		void setNeedPassword(bool _bool);
 		void setPassword(std::string password);
 		std::string getPassword();
+		int getLimitUser();
 		bool getHasUserLimit();
 		void setHasUserLimit(bool _bool, int limitUser);
 
 		void addNewOperator(int i);
 		void deleteOperator(int i);
 
-		std::vector<int> getUser();
-		std::vector<int> getOwner();
+		std::vector<int>& getUser();
+		std::vector<int>& getOwner();
 
 		bool isOp(int fd);
 
 
 		~Channels();
 		std::string getName();
+		std::string getTopic();
+		void setTopic(std::string topic);
 };
 
 #endif
