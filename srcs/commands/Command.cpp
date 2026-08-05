@@ -14,6 +14,7 @@ CommandManager::CommandManager()
 	_commands["PRIVMSG"] = &cmdPrivmsg;
 	_commands["MODE"] = &cmdMode;
 	_commands["PING"] = &cmdPing;
+	_commands["TOPIC"] = &cmdTopic;
 }
 
 CommandManager::~CommandManager()

@@ -63,9 +63,11 @@ std::string Channels::getTopic()
 	return this->topic;
 }
 
-void Channels::setTopic(std::string topic)
+void Channels::setTopic(const std::string& newTopic, const std::string& setter)
 {
-	this->topic = topic;
+	topic = newTopic;
+	topicSetter = setter;
+	topicTime = std::time(NULL);
 }
 
 bool Channels::getNeedInvite()
@@ -153,4 +155,13 @@ std::string Channels::getPassword()
 int Channels::getLimitUser()
 {
 	return this->limitUser;
+}
+const std::string& Channels::getTopicSetter() const
+{
+	return this->topicSetter;
+}
+
+time_t Channels::getTopicTime()
+{
+	return this->topicTime;
 }

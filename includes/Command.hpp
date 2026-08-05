@@ -30,5 +30,6 @@ void cmdJoin(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 void cmdPrivmsg(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg);
 void cmdMode(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg);
 void cmdPing(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg);
+void cmdTopic(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg);
 
 #endif

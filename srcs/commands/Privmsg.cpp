@@ -3,59 +3,101 @@
 /*                                                        :::      ::::::::   */
 /*   Privmsg.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gabch <gabch@student.42.fr>                +#+  +:+       +#+        */
+/*   By: kevlim <kevlim@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/29 13:17:54 by kevlim            #+#    #+#             */
-/*   Updated: 2026/07/29 18:04:39 by gabch            ###   ########.fr       */
+/*   Updated: 2026/08/05 17:24:30 by kevlim           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Command.hpp"
 #include "Server.hpp"
 #include "Client.hpp"
+#include "NumericReplies.hpp"
 #include "Message.hpp"
 #include <iostream>
 #include "Channels.hpp"
 
 void cmdPrivmsg(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg)
 {
-	(void)socketFd;
-	//Verif des param
-	if (msg.getParams().empty())
+
+	if (!sender.isRegistered)
 	{
-		std::cout << "[PRIVMSG] Erreur: Aucun destinataire" << std::endl;
-		// ERR_NORECIPIENT (411)
+		std::string clientNick = sender.nickname.empty() ? "*" : sender.nickname;
+		std::string err = ERR_NOTREGISTERED(clientNick);
+		send(socketFd, err.c_str(), err.length(), 0);
+		return;
 	}
-	if (msg.getParams().size() < 2)
+
+	//pas de destinataire
+	if (msg.getParams().empty() || msg.getParams()[0].empty())
 	{
-		std::cout << "[PRIVMSG] Erreur: Aucun texte à envoyer" << std::endl;
-		// ERR_NOTEXTTOSEND (412)
+		std::string err = ERR_NORECIPIENT(sender.nickname, "PRIVMSG");
+		send(socketFd, err.c_str(), err.length(), 0);
+		return;
+	}
+
+	//pas de texte
+	if (msg.getParams().size() < 2 || msg.getParams()[1].empty())
+	{
+		std::string err = ERR_NOTEXTTOSEND(sender.nickname);
+		send(socketFd, err.c_str(), err.length(), 0);
 		return;
 	}
 
 	std::string target = msg.getParams()[0];
 	std::string text = msg.getParams()[1];
+	std::string prefix = ":" + sender.nickname + "!" + sender.user + "@127.0.0.1";
+	std::string formattedMsg = prefix + " PRIVMSG " + target + " :" + text + "\r\n";
 
-	//pr l'instant j'ignore le #
 	if (target[0] == '#')
 	{
-		// std::cout << "[PRIVMSG] Salon " << target << " ignore (pour l'instant)" << std::endl;
-
-		std::size_t i = 0;
 		std::vector<Channels>& channels = server.getChannels();
-		while (i < channels.size())
+		int chanIdx = -1;
+
+		for (std::size_t i = 0; i < channels.size(); i++)
 		{
-			std::cout << "channels name : " << channels[i].getName() << " Target : " << target << std::endl;
 			if (channels[i].getName() == target)
 			{
-				std::string prefix = ":" + sender.nickname + "!" + sender.user + "@127.0.0.1";
-				std::string formattedMsg = prefix + " PRIVMSG " + target + " :" + text + "\r\n";
-				channels[i].sendMsg(socketFd, server.getServerSocket(), formattedMsg);
-				std::cout << "[PRIVMSG] " << sender.nickname << " -> " << target << " : " << text << std::endl;
-				break ;
+				chanIdx = static_cast<int>(i);
+				break;
 			}
-			i++;
 		}
+
+		//err : channel inexistant
+		if (chanIdx == -1)
+		{
+			std::string err = ERR_NOSUCHNICK(sender.nickname, target);
+			send(socketFd, err.c_str(), err.length(), 0);
+			return;
+		}
+
+		Channels& chan = channels[chanIdx];
+
+		// verif client dans le channel
+		bool isMember = chan.isOp(socketFd);
+		if (!isMember)
+		{
+			std::vector<int> users = chan.getUser();
+			for (std::size_t i = 0; i < users.size(); i++)
+			{
+				if (users[i] == socketFd)
+				{
+					isMember = true;
+					break;
+				}
+			}
+		}
+
+		if (!isMember)
+		{
+			std::string err = ERR_CANNOTSENDTOCHAN(sender.nickname, target);
+			send(socketFd, err.c_str(), err.length(), 0);
+			return;
+		}
+
+		//envoie le msg a tous les autres membres a part lui
+		chan.sendMsg(socketFd, server.getServerSocket(), formattedMsg);
 		return;
 	}
 
@@ -76,13 +118,10 @@ void cmdPrivmsg(Server& server, Client::ClientInfo& sender, int socketFd, const 
 	//si pas trouve
 	if (targetFd == -1)
 	{
-		std::cout << "[PRIVMSG] Erreur: Utilisateur " << target << " introuvable" << std::endl;
-		// ERR_NOSUCHNICK (401)
+		std::string err = ERR_NOSUCHNICK(sender.nickname, target);
+		send(socketFd, err.c_str(), err.length(), 0);
 		return;
 	}
-
-	std::string prefix = ":" + sender.nickname + "!" + sender.user + "@127.0.0.1";
-	std::string formattedMsg = prefix + " PRIVMSG " + target + " :" + text + "\r\n";
 
 	send(targetFd, formattedMsg.c_str(), formattedMsg.length(), 0);
 	std::cout << "[PRIVMSG] " << sender.nickname << " -> " << target << " : " << text << std::endl;

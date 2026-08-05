@@ -8,7 +8,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-
+#include <ctime>
 #include <fcntl.h>
 
 #include "Client.hpp"
@@ -27,6 +27,9 @@ class Channels
 		std::string password;
 		bool hasUserLimit;
 		int limitUser;
+		std::string topicSetter; // author
+		time_t topicTime; // date de modif
+
 	public:
 		Channels(int ownerFd, std::string name);
 		void joinChannels(int fd);
@@ -56,7 +59,11 @@ class Channels
 		~Channels();
 		std::string getName();
 		std::string getTopic();
-		void setTopic(std::string topic);
+
+		const std::string& getTopicSetter() const;
+		time_t getTopicTime();
+		void setTopic(const std::string& newTopic, const std::string& setter);
+
 };
 
 #endif

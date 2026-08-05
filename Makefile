@@ -13,6 +13,7 @@ SRCS =	srcs/main.cpp \
 		srcs/commands/Privmsg.cpp \
 		srcs/commands/Mode.cpp \
 		srcs/commands/Ping.cpp \
+		srcs/commands/Topic.cpp \
 		srcs/Channels.cpp
 OBJS = $(SRCS:.cpp=.o)
 
