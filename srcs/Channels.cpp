@@ -2,6 +2,7 @@
 
 Channels::Channels(int ownerFd, std::string name)
 {
+	this->user.push_back(ownerFd);
 	this->owner.push_back(ownerFd);
 	this->name = name;
 	this->topic = "";
@@ -12,39 +13,17 @@ Channels::Channels(int ownerFd, std::string name)
 	this->limitUser = 0;
 }
 
-void Channels::joinChannels(int fd)
-{
-	this->user.push_back(fd);
-}
-
 void Channels::sendMsg(int msgFd, int serverFd, std::string msg)
 {
 	(void)serverFd;
-	std::size_t i = 0;
 
-	while (i < owner.size())
+	for (std::size_t i = 0; i < this->user.size(); i++)
 	{
-		if (msgFd == owner[i])
-		{
-			i++;
+		if (msgFd >= 0 && this->user[i] == msgFd)
 			continue;
-		}
-		send(owner[i], msg.c_str(), msg.length(), 0);
-		std::cout << "send msg" << std::endl;
-		i++;
-	}
 
-	i = 0;
-	while (i < user.size())
-	{
-		if (msgFd == user[i])
-		{
-			i++;
-			continue;
-		}
-		send(user[i], msg.c_str(), msg.length(), 0);
-		std::cout << "send msg" << std::endl;
-		i++;
+		send(this->user[i], msg.c_str(), msg.length(), 0);
+		std::cout << "[DEBUG] send msg to FD: " << this->user[i] << std::endl;
 	}
 }
 
@@ -114,16 +93,52 @@ std::vector<int>& Channels::getOwner()
 	return this->owner;
 }
 
-void Channels::addNewOperator(int i)
+void Channels::addUser(int clientFd)
 {
-	this->owner.push_back(this->user[i]);
-	this->user.erase (this->user.begin()+i);
+	for (std::size_t i = 0; i < this->user.size(); i++)
+	{
+		if (this->user[i] == clientFd)
+			return;
+	}
+	this->user.push_back(clientFd);
 }
 
-void Channels::deleteOperator(int i)
+void Channels::removeUser(int clientFd)
 {
-	this->user.push_back(this->owner[i]);
-	this->owner.erase (this->owner.begin()+i);
+	for (std::vector<int>::iterator it = this->user.begin(); it != this->user.end(); ++it)
+	{
+		if (*it == clientFd)
+		{
+			this->user.erase(it);
+			break;
+		}
+	}
+	deleteOperator(clientFd);
+}
+
+void Channels::addNewOperator(int clientFd)
+{
+	// cherche le Fd correspondant dans le vecteur (si deja op)
+	for (std::size_t i = 0; i < this->owner.size(); i++)
+	{
+		if (this->owner[i] == clientFd)
+			return;
+	}
+	// sinon ajoute le dans la liste des op
+	this->owner.push_back(clientFd);
+}
+
+void Channels::deleteOperator(int clientFd)
+{
+	// cherche le Fd correspondant dans le vecteur
+	for (std::vector<int>::iterator it = this->owner.begin(); it != this->owner.end(); ++it)
+	{
+		if (*it == clientFd)
+		{
+			this->owner.erase(it);
+			break; // supprime et stop
+		}
+	}
 }
 
 bool Channels::getHasUserLimit()
@@ -142,9 +157,9 @@ bool Channels::isOp(int fd)
 	for (std::size_t i=0 ; i < this->owner.size() ; i++)
 	{
 		if (fd == this->owner[i])
-			return 1;
+			return true;
 	}
-	return 0;
+	return false;
 }
 
 std::string Channels::getPassword()

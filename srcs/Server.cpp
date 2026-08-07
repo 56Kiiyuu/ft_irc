@@ -4,7 +4,7 @@
 #include "NumericReplies.hpp"
 #include <iostream>
 #include <unistd.h>
-
+#include <set>
 #include <stdio.h>
 
 Server::Server() : clients()
@@ -70,7 +70,6 @@ bool Server::readSocketFd(std::string& buff, struct pollfd& pollFd)
 		return true; //donnees recu succes
 	}
 	std::cout << "[-] Client FD " << pollFd.fd << " deconnecte." << std::endl;
-	close(pollFd.fd);
 	return false;
 }
 
@@ -89,6 +88,11 @@ void Server::handleCmds(std::string& buffClient, int socketFd)
 {
 	while (true)
 	{
+		if (this->clients.getClientInfo().find(socketFd) == this->clients.getClientInfo().end())
+		{
+			buffClient.clear();
+			return;
+		}
 		std::string line = rnl(buffClient);
 		// si plus de ligne avec \n ou \r\n = sort
 		if (line.empty() && buffClient.find("\n") == std::string::npos)
@@ -100,6 +104,12 @@ void Server::handleCmds(std::string& buffClient, int socketFd)
 		Client::ClientInfo& sender = clients.getClientInfo()[socketFd];
 		Message msg(line);
 		_cmdManager.routeCommand(*this, sender, socketFd, msg);
+
+		if (this->clients.getClientInfo().find(socketFd) == this->clients.getClientInfo().end())
+		{
+			buffClient.clear();
+			return;
+		}
 	}
 }
 
@@ -112,38 +122,62 @@ void Server::handlePoll()
 		std::cout << "Wait poll" << std::endl;
 		int nbEvent = poll(pollFd.data(), pollFd.size(), -1);
 
-		if (nbEvent <= 0)
+		if (nbEvent < 0)
 		{
-			std::cout << "Error with poll" << std::endl;
+			if (errno == EINTR) //sigint
+				continue;
+			std::cout << "Error with poll" << strerror(errno) << std::endl;
 			return;
 		}
 
-		for (size_t i = 0; i < pollFd.size(); ++i)
+		size_t currentSize = pollFd.size();
+		for (size_t i = 0; i < currentSize; ++i)
 		{
-			if (pollFd[i].revents & POLLIN)
+			if (pollFd[i].revents == 0)
+				continue;
+
+			// CAS 1 : Nouveau client sur le socket serveur
+			if (pollFd[i].fd == this->_socketServer)
 			{
-				// CAS 1 : Nouveaute sur le socket serveur -> accept()
-				if (pollFd[i].fd == this->_socketServer)
+				if (pollFd[i].revents & POLLIN)
 				{
 					handleCon();
+					break;
 				}
-				// CAS 2 : Nouveaute sur un socket client -> recv()
-				else
-				{
-					int clientFd = pollFd[i].fd;
-					std::string& buffClient = clients.getClientInfo()[clientFd].buff;
+			}
+			// CAS 2 : Activite ou deco sur un socket client
+			else
+			{
+				int clientFd = pollFd[i].fd;
 
-					// Si readSocketFd renvoie true (client toujours actif)
+				// Si le socket signale une deconnexion ou une erreur directe
+				if (pollFd[i].revents & (POLLHUP | POLLERR | POLLNVAL))
+				{
+					this->disconnectClient(clientFd, "Connection closed");
+					break;
+				}
+
+				// le socket lis des donnees
+				if (pollFd[i].revents & POLLIN)
+				{
+					if (this->clients.getClientInfo().find(clientFd) == this->clients.getClientInfo().end())
+						continue;
+
+					std::string& buffClient = this->clients.getClientInfo()[clientFd].buff;
+
 					if (readSocketFd(buffClient, pollFd[i]))
 					{
 						handleCmds(buffClient, clientFd);
+						if (this->clients.getClientInfo().find(clientFd) == this->clients.getClientInfo().end())
+						{
+							break;
+						}
 					}
 					else
 					{
-						// Le client suppr du vector dans removeClient !
-						// On decremente i pour ne pas sauter le client suivant dans la boucle for
-						this->disconnectClient(clientFd);
-						--i;
+						// si erreur de lecture ou false
+						this->disconnectClient(clientFd, "Connection closed by client");
+						break;
 					}
 				}
 			}
@@ -203,42 +237,65 @@ int Server::getServerSocket()
 }
 
 //fonction pour deco les client
-void Server::disconnectClient(int clientFd)
+void Server::disconnectClient(int clientFd, const std::string& quitReason)
 {
-	std::vector<Channels>& channels = this->getChannels();
+	//secu
+	std::map<int, Client::ClientInfo>& clientMap = this->clients.getClientInfo();
+	std::map<int, Client::ClientInfo>::iterator clientIt = clientMap.find(clientFd);
 
+	if (clientIt == clientMap.end())
+		return;
+
+	Client::ClientInfo sender = clientIt->second;
+	//msg
+	std::string reason = quitReason.empty() ? "Client quit" : quitReason;
+	std::string prefix = ":" + sender.nickname + "!" + sender.user + "@127.0.0.1";
+	std::string quitMsg = prefix + " QUIT :" + reason + "\r\n";
+
+	std::vector<Channels>& channels = this->getChannels();
+	std::set<int> recipients;
 	//clear client de tous les channels
 	for (std::size_t i = 0; i < channels.size(); )
 	{
 		std::vector<int>& users = channels[i].getUser();
-		std::vector<int>& owners = channels[i].getOwner();
-
-		//retrait des users
-		for (std::vector<int>::iterator it = users.begin(); it != users.end(); )
+		bool wasInChan = false;
+		for (std::size_t u = 0; u < users.size(); u++)
 		{
-			if (*it == clientFd)
-				it = users.erase(it);
-			else
-				++it;
+			if (users[u] == clientFd)
+			{
+				wasInChan = true;
+				break;
+			}
 		}
 
-		//retrait des owners / ops
-		for (std::vector<int>::iterator it = owners.begin(); it != owners.end(); )
+		if (wasInChan)
 		{
-			if (*it == clientFd)
-				it = owners.erase(it);
-			else
-				++it;
+			for (std::size_t u = 0; u < users.size(); u++)
+			{
+				if (users[u] != clientFd)
+					recipients.insert(users[u]);
+			}
+			channels[i].removeUser(clientFd);
 		}
+	}
 
-		// Supprimer le canal s'il n'y a plus personne
-		if (channels[i].getUser().empty() && channels[i].getOwner().empty())
+	//envoie QUIT une seule fois a chaque client
+	for (std::set<int>::iterator it = recipients.begin(); it != recipients.end(); ++it)
+	{
+		send(*it, quitMsg.c_str(), quitMsg.length(), 0);
+	}
+
+	//retirer client des channels et suppr si vides
+	std::vector<Channels>::iterator cIt = channels.begin();
+	while (cIt != channels.end())
+	{
+		if (cIt->getUser().empty())
 		{
-			channels.erase(channels.begin() + i);
+			cIt = channels.erase(cIt);
 		}
 		else
 		{
-			i++;
+			++cIt;
 		}
 	}
 

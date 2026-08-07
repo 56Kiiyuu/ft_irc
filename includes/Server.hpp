@@ -57,7 +57,7 @@ class Server
 		void					setPassword(const std::string& password);
 		int&					getRun();
 		int						getServerSocket();
-		void					disconnectClient(int clientFd);
+		void					disconnectClient(int clientFd, const std::string& quitReason);
 };
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: kevlim <kevlim@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/05 16:32:07 by kevlim            #+#    #+#             */
-/*   Updated: 2026/08/05 17:02:55 by kevlim           ###   ########.fr       */
+/*   Updated: 2026/08/07 13:54:58 by kevlim           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,5 +114,4 @@ void	cmdTopic(Server& server, Client::ClientInfo& sender, int socketFd, const Me
 	std::string topicMsg = prefix + " TOPIC " + chanName + " :" + newTopic + "\r\n";
 
 	chan.sendMsg(-1, server.getServerSocket(), topicMsg); // sendMsg a tout le monde si msgFd = -1
-	send(socketFd, topicMsg.c_str(), topicMsg.length(), 0);
 }

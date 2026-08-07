@@ -27,6 +27,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	signal(SIGPIPE, SIG_IGN);
 	std::string password = argv[2];
 	server.setPassword(password);
 	struct sigaction sa;

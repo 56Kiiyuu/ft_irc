@@ -77,8 +77,13 @@ void cmdMode(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 	}
 
 	std::string modes = msg.getParams()[1];
-	bool plus = false;
+	bool plus = true;
 	std::size_t indexArgs = 2;
+
+	// pour les modes
+	std::string appliedModes = "";
+	std::string appliedArgs = "";
+	char lastSign = '\0';
 	for (std::size_t i=0 ; i < modes.size() ; i++)
 	{
 		if (modes[i] == '+')
@@ -92,100 +97,146 @@ void cmdMode(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 			continue;
 		}
 
+		bool modeChanged = false;
+		std::string currentArg = "";
+
 		switch (modes[i])
 		{
-		case 'i':
-			chan.setNeedInvite(plus);
-			continue;
-		case 't':
-			chan.setRestrictedTopic(plus);
-			continue;
-		case 'k':
-			if (plus == true)
+			case 'i':
+				if (chan.getNeedInvite() != plus)
+				{
+					chan.setNeedInvite(plus);
+					modeChanged = true;
+				}
+				break;
+			case 't':
+				if (chan.getRestrictedTopic() != plus)
+				{
+					chan.setRestrictedTopic(plus);
+					modeChanged = true;
+				}
+				break;
+			case 'k':
+				if (plus == true)
+				{
+					if (indexArgs >= msg.getParams().size())
+						continue; // Secu out-of-bounds
+					currentArg = msg.getParams()[indexArgs++];
+					chan.setNeedPassword(true);
+					chan.setPassword(currentArg);
+					modeChanged = true;
+				}
+				else
+				{
+					if (chan.getNeedPassword())
+					{
+						chan.setNeedPassword(false);
+						chan.setPassword("");
+						modeChanged = true;
+					}
+				}
+				break;
+			case 'o':
 			{
 				if (indexArgs >= msg.getParams().size())
-					continue; // Secu out-of-bounds
-				chan.setNeedPassword(true);
-				chan.setPassword(msg.getParams()[indexArgs]);
-				indexArgs++;
-			}
-			else
-				chan.setNeedPassword(false);
-			continue;
-		case 'o':
-		{
-			if (indexArgs >= msg.getParams().size())
-					continue; // Secu out-of-bounds
-			std::string targetNick = msg.getParams()[indexArgs];
+						continue; // Secu out-of-bounds
+				std::string targetNick = msg.getParams()[indexArgs++];
+				currentArg = targetNick;
 
-			if (plus == true)
-			{
-				std::vector<int> user = chan.getUser();
-				for (std::size_t j = 0; j < user.size(); j++)
+				int targetFd = -1;
+				std::map<int, Client::ClientInfo>& clientMap = server.getClients().getClientInfo();
+				std::map<int, Client::ClientInfo>::iterator it;
+				for (it = clientMap.begin(); it != clientMap.end(); ++it)
 				{
-					if (server.getClients().getClientInfo()[user[j]].nickname == targetNick)
+					if (it->second.nickname == targetNick)
 					{
-						chan.addNewOperator(static_cast<int>(j));
+						targetFd = it->first;
 						break;
 					}
 				}
-			}
-			else
-			{
-				std::vector<int> owner = chan.getOwner();
-				for (std::size_t j=0 ; j < owner.size() ; j++)
+
+				if (targetFd == -1)
 				{
-					if (server.getClients().getClientInfo()[owner[j]].nickname == targetNick)
+					std::string err = ERR_NOSUCHNICK(sender.nickname, targetNick);
+					send(socketFd, err.c_str(), err.length(), 0);
+					break;
+				}
+
+				if (plus)
+				{
+					if (!chan.isOp(targetFd))
 					{
-						chan.deleteOperator(static_cast<int>(j));
-						break;
+						chan.addNewOperator(targetFd);
+						modeChanged = true;
 					}
 				}
+				else
+				{
+					if (chan.isOp(targetFd))
+					{
+						chan.deleteOperator(targetFd);
+						modeChanged = true;
+					}
+				}
+				break;
 			}
-			indexArgs++;
-			continue;
-		}
+			case 'l':
+				if (plus == true)
+				{
+					if (indexArgs >= msg.getParams().size())
+						continue; //secu out-of-bounds
 
-		case 'l':
-			if (plus == true)
-			{
-				if (indexArgs >= msg.getParams().size())
-					continue; //secu out-of-bounds
+					int limit = 0;
+					std::string limitStr = msg.getParams()[indexArgs++];
+					std::stringstream ss(limitStr);
+					ss >> limit;
 
-				int	limit = 0;
-				std::stringstream	ss(msg.getParams()[indexArgs]);
-				ss >> limit;
+					if (limit > 0)
+					{
+						chan.setHasUserLimit(true, limit);
+						currentArg = limitStr;
+						modeChanged = true;
+					}
+				}
+				else
+				{
+					if (chan.getHasUserLimit())
+					{
+						chan.setHasUserLimit(false, 0);
+						modeChanged = true;
+					}
+				}
+				break;
 
-				if (limit > 0)
-					chan.setHasUserLimit(true, limit);
-				indexArgs++;
-			}
-			else
-				chan.setHasUserLimit(false, 0);
-			continue;
-
-		default:
+			default:
 			{
 				std::string err = ERR_UNKNOWNMODE(sender.nickname, std::string(1, modes[i]));
 				send(socketFd, err.c_str(), err.length(), 0);
 			}
-			continue;
 		}
 
+		if (modeChanged)
+		{
+			char currentSign = plus ? '+' : '-';
+			if (currentSign != lastSign)
+			{
+				appliedModes += currentSign;
+				lastSign = currentSign;
+			}
+			appliedModes += modes[i];
+			if (!currentArg.empty())
+				appliedArgs += " " + currentArg;
+		}
 	}
-	std::string prefix = ":" + sender.nickname + "!" + sender.user + "@127.0.0.1";
-	std::string formattedMsg = prefix + " MODE";
 
-	for (std::size_t i=0 ; i < msg.getParams().size() ; i++)
+	if (!appliedModes.empty())
 	{
-		formattedMsg += " " + msg.getParams()[i];
-	}
-	formattedMsg += "\r\n";
-	chan.sendMsg(socketFd, server.getServerSocket(), formattedMsg);
-	send(socketFd, formattedMsg.c_str(), formattedMsg.length(), 0);
+		std::string prefix = ":" + sender.nickname + "!" + sender.user + "@127.0.0.1";
+		std::string formattedMsg = prefix + " MODE " + channel + " " + appliedModes + appliedArgs + "\r\n";
 
-	std::cout << "[MODE] Finish setup mode -> " << std::endl;
-	std::cout << "[MODE] " << formattedMsg << std::endl;
-	std::cout << "[MODE] i:" << server.getChannels()[indexChannel].getNeedInvite() << " k:" << server.getChannels()[indexChannel].getNeedPassword() << " Password:" << server.getChannels()[indexChannel].getNeedPassword() << std::endl;
+		chan.sendMsg(-1, server.getServerSocket(), formattedMsg);
+
+		std::cout << "[MODE] Applied -> " << formattedMsg;
+	}
 	// on laisse vide pr l'instant
 }

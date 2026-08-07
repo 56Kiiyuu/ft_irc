@@ -32,7 +32,6 @@ class Channels
 
 	public:
 		Channels(int ownerFd, std::string name);
-		void joinChannels(int fd);
 		void sendMsg(int msgFd, int serverFd, std::string msg);
 
 		bool getNeedInvite();
@@ -47,8 +46,10 @@ class Channels
 		bool getHasUserLimit();
 		void setHasUserLimit(bool _bool, int limitUser);
 
-		void addNewOperator(int i);
-		void deleteOperator(int i);
+		void addUser(int clientFd);
+		void removeUser(int clientFd);
+		void addNewOperator(int clientFd);
+		void deleteOperator(int clientFd);
 
 		std::vector<int>& getUser();
 		std::vector<int>& getOwner();

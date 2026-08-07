@@ -3,6 +3,7 @@
 #include "Client.hpp"
 #include "Message.hpp"
 #include <iostream>
+#include <sstream>
 
 CommandManager::CommandManager()
 {
@@ -16,11 +17,24 @@ CommandManager::CommandManager()
 	_commands["PING"] = &cmdPing;
 	_commands["TOPIC"] = &cmdTopic;
 	_commands["KICK"] = &cmdKick;
-
+	_commands["PART"] = &cmdPart;
+	_commands["QUIT"] = &cmdQuit;
 }
 
 CommandManager::~CommandManager()
 {}
+
+std::vector<std::string> splitString(const std::string& str, char delimiter)
+{
+	std::vector<std::string> tokens;
+	std::stringstream ss(str);
+	std::string token;
+	while (std::getline(ss, token, delimiter))
+	{
+			tokens.push_back(token);
+	}
+	return tokens;
+}
 
 void CommandManager::routeCommand(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg)
 {

@@ -6,7 +6,7 @@
 /*   By: kevlim <kevlim@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/29 13:16:57 by kevlim            #+#    #+#             */
-/*   Updated: 2026/08/05 15:17:30 by kevlim           ###   ########.fr       */
+/*   Updated: 2026/08/07 14:56:01 by kevlim           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,19 +18,6 @@
 #include "NumericReplies.hpp"
 #include <iostream>
 #include <sys/socket.h>
-#include <sstream>
-
-std::vector<std::string> splitString(const std::string& str, char delimiter)
-{
-	std::vector<std::string> tokens;
-	std::stringstream ss(str);
-	std::string token;
-	while (std::getline(ss, token, delimiter))
-	{
-			tokens.push_back(token);
-	}
-	return tokens;
-}
 
 void cmdJoin(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg)
 {
@@ -124,7 +111,7 @@ void cmdJoin(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 			//verif mode+l(User Limit)
 			if (chan.getHasUserLimit())
 			{
-				std::size_t totalUsers = chan.getUser().size() + chan.getOwner().size();
+				std::size_t totalUsers = chan.getUser().size();
 				if (totalUsers >= static_cast<std::size_t>(chan.getLimitUser()))
 				{
 					std::string err = ERR_CHANNELISFULL(sender.nickname, chanName);
@@ -141,7 +128,7 @@ void cmdJoin(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 				continue;
 			}
 
-			chan.joinChannels(socketFd);
+			chan.addUser(socketFd);
 		}
 
 		Channels& chan = channels[chanIdx];
@@ -150,8 +137,7 @@ void cmdJoin(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 		std::string prefix = ":" + sender.nickname + "!" + sender.user + "@127.0.0.1";
 		std::string joinMsg = prefix + " JOIN " + chanName + "\r\n";
 
-		chan.sendMsg(socketFd, server.getServerSocket(), joinMsg);
-		send(socketFd, joinMsg.c_str(), joinMsg.length(), 0);
+		chan.sendMsg(-1, server.getServerSocket(), joinMsg);
 
 		if (!chan.getTopic().empty())
 		{
@@ -161,22 +147,19 @@ void cmdJoin(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 
 		//liste des membres
 		std::string userList = "";
+		std::vector<int> users = chan.getUser();
 
 		//owners
-		std::vector<int> owners = chan.getOwner();
-		for (std::size_t i = 0; i < owners.size(); i++)
+		for (std::size_t i = 0; i < users.size(); i++)
 		{
 			if (!userList.empty())
 				userList += " ";
-			userList += "@" + server.getClients().getClientInfo()[owners[i]].nickname;
-		}
 
-		//users
-		std::vector<int> users = chan.getUser();
-		for (std::size_t i = 0; i < users.size(); i++)
-		{
-			if (!userList.empty()) userList += " ";
-			userList += server.getClients().getClientInfo()[users[i]].nickname;
+			int userFd = users[i];
+			std::string prefixSymbol = chan.isOp(userFd) ? "@" : "";
+			std::string nick = server.getClients().getClientInfo()[userFd].nickname;
+
+			userList += prefixSymbol + nick;
 		}
 
 		std::string namReply = RPL_NAMREPLY(sender.nickname, chanName, userList);

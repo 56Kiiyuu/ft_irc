@@ -22,6 +22,8 @@ class CommandManager
 		void	routeCommand(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg);
 };
 
+std::vector<std::string> splitString(const std::string& str, char delimiter);
+
 void cmdCap(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg);
 void cmdPass(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg);
 void cmdNick(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg);
@@ -32,5 +34,6 @@ void cmdMode(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 void cmdPing(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg);
 void cmdTopic(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg);
 void cmdKick(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg);
-
+void cmdPart(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg);
+void cmdQuit(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg);
 #endif
