@@ -190,3 +190,21 @@ void Channels::kickOwner(int index)
 {
 	this->owner.erase(this->owner.begin() + index);
 }
+
+void Channels::addInvite(int fd)
+{
+	this->invite.push_back(fd);
+}
+
+bool Channels::checkInvite(int fd)
+{
+	for (std::size_t i=0 ; i < this->invite.size() ; i++)
+	{
+		if (fd == this->invite[i])
+		{
+			this->invite.erase(this->invite.begin() + i);
+			return true;
+		}
+	}
+	return false;
+}

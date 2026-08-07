@@ -70,7 +70,7 @@ class Channels
 		void kickOwner(int index);
 
 		void addInvite(int fd);
-
+		bool checkInvite(int fd);
 };
 
 #endif
