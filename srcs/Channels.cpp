@@ -165,3 +165,13 @@ time_t Channels::getTopicTime()
 {
 	return this->topicTime;
 }
+
+void Channels::kickUser(int index)
+{
+	this->user.erase(this->user.begin() + index);
+}
+
+void Channels::kickOwner(int index)
+{
+	this->owner.erase(this->owner.begin() + index);
+}

@@ -64,6 +64,9 @@ class Channels
 		time_t getTopicTime();
 		void setTopic(const std::string& newTopic, const std::string& setter);
 
+		void kickUser(int index);
+		void kickOwner(int index);
+
 };
 
 #endif

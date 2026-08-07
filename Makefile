@@ -14,7 +14,8 @@ SRCS =	srcs/main.cpp \
 		srcs/commands/Mode.cpp \
 		srcs/commands/Ping.cpp \
 		srcs/commands/Topic.cpp \
-		srcs/Channels.cpp
+		srcs/Channels.cpp \
+		srcs/commands/Kick.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 CPPFLAGS = -Wall -Werror -Wextra -std=c++98 -g -I$(INC)

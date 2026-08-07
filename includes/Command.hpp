@@ -31,5 +31,6 @@ void cmdPrivmsg(Server& server, Client::ClientInfo& sender, int socketFd, const 
 void cmdMode(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg);
 void cmdPing(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg);
 void cmdTopic(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg);
+void cmdKick(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg);
 
 #endif
