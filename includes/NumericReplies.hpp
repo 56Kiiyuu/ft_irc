@@ -36,6 +36,8 @@ std::string to_string(T value)
 #define ERR_NICKNAMEINUSE(nick, attempted) (":" + SERVER_NAME + " 433 " + (nick.empty() ? "*" : nick) + " " + attempted + " :Nickname is already in use\r\n")
 #define ERR_USERNOTINCHANNEL(nick, channel) (":" + SERVER_NAME + " 441 " + nick + " " + channel + " :Target is not in the channel\r\n")
 #define ERR_NOTONCHANNEL(nick, channel) (":" + SERVER_NAME + " 442 " + nick + " " + channel + " :You're not on that channel\r\n")
+#define ERR_USERALREADYINCHANNEL(nick, target, channel) (":" + SERVER_NAME + " 443 " + nick + " " + target + " " + channel + ":is already on channel\r\n")
+
 #define ERR_NOTREGISTERED(nick) (":" + SERVER_NAME + " 451 " + (nick.empty() ? "*" : nick) + " :You have not registered\r\n")
 #define ERR_NEEDMOREPARAMS(nick, cmd) (":" + SERVER_NAME + " 461 " + (nick.empty() ? "*" : nick) + " " + cmd + " :Not enough parameters\r\n")
 #define ERR_ALREADYREGISTRED(nick) (":" + SERVER_NAME + " 462 " + nick + " :Unauthorized command (already registered)\r\n")

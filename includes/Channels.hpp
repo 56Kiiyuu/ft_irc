@@ -18,6 +18,7 @@ class Channels
 	private:
 		std::vector<int> owner;
 		std::vector<int> user;
+		std::vector<int> invite;
 		std::string name;
 		std::string topic;
 		std::vector<std::string> modes;
@@ -67,6 +68,8 @@ class Channels
 
 		void kickUser(int index);
 		void kickOwner(int index);
+
+		void addInvite(int fd);
 
 };
 
