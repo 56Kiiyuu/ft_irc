@@ -291,7 +291,13 @@ void Server::disconnectClient(int clientFd, const std::string& quitReason)
 	{
 		if (cIt->getUser().empty())
 		{
+<<<<<<< HEAD
 			cIt = channels.erase(cIt);
+=======
+			std::cout << "try to erase channel" << std::endl;
+			channels.erase(channels.begin() + i);
+			std::cout << "work" << std::endl;
+>>>>>>> c86808b (add invite juste quelque trucs a revoir comme les msg qui se send pas pour confirmer l'invitation au sender et crash chelou quand /quit dans un channel a +2 (tester + pour chercher d'ou ca peut venir))
 		}
 		else
 		{

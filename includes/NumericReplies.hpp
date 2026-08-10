@@ -22,6 +22,7 @@ std::string to_string(T value)
 #define RPL_TOPICWHOTIME(nick, channel, setter, topicTime) (":" + SERVER_NAME + " 333 " + nick + " " + channel + " " + setter + " " + to_string(topicTime) + "\r\n")
 #define RPL_NAMREPLY(nick, channel, users) (":" + SERVER_NAME + " 353 " + nick + " = " + channel + " :" + users + "\r\n")
 #define RPL_ENDOFNAMES(nick, channel) (":" + SERVER_NAME + " 366 " + nick + " " + channel + " :End of /NAMES list\r\n")
+#define RPL_INVITE(sender_nick, invited_nick, channel) (":" + SERVER_NAME + " 341 " + sender_nick + " " + invited_nick + " " + channel + "\r\n")
 
 //ERRORS (400 - 599)
 #define ERR_NOSUCHNICK(nick, target) (":" + SERVER_NAME + " 401 " + nick + " " + target + " :No such nick/channel\r\n")

@@ -36,4 +36,6 @@ void cmdTopic(Server& server, Client::ClientInfo& sender, int socketFd, const Me
 void cmdKick(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg);
 void cmdPart(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg);
 void cmdQuit(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg);
+void cmdInvite(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg);
+
 #endif

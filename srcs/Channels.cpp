@@ -1,6 +1,6 @@
 #include "Channels.hpp"
 
-Channels::Channels(int ownerFd, std::string name)
+Channels::Channels(int ownerFd, std::string name) : modes()
 {
 	this->user.push_back(ownerFd);
 	this->owner.push_back(ownerFd);
@@ -198,6 +198,9 @@ void Channels::addInvite(int fd)
 
 bool Channels::checkInvite(int fd)
 {
+	if (this->invite.empty())
+		return false;
+
 	for (std::size_t i=0 ; i < this->invite.size() ; i++)
 	{
 		if (fd == this->invite[i])

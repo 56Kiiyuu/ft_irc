@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Join.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kevlim <kevlim@student.42.fr>              +#+  +:+       +#+        */
+/*   By: gabch <gabch@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/29 13:16:57 by kevlim            #+#    #+#             */
-/*   Updated: 2026/08/07 14:56:01 by kevlim           ###   ########.fr       */
+/*   Updated: 2026/08/10 15:57:26 by gabch            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,9 +123,12 @@ void cmdJoin(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 			//verif mode+i (Invite Only)
 			if (chan.getNeedInvite())
 			{
-				std::string err = ERR_INVITEONLYCHAN(sender.nickname, chanName);
-				send(socketFd, err.c_str(), err.length(), 0);
-				continue;
+				if (!chan.checkInvite(sender.fd))
+				{
+					std::string err = ERR_INVITEONLYCHAN(sender.nickname, chanName);
+					send(sender.fd, err.c_str(), err.length(), 0);
+					return;
+				}
 			}
 
 			chan.addUser(socketFd);

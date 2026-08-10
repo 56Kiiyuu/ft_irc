@@ -66,7 +66,7 @@ void cmdInvite(Server& server, Client::ClientInfo& sender, int socketFd, const M
 
 	// cherche l'utilisateur a inviter sur le server
 	std::map<int, Client::ClientInfo> users = server.getClients().getClientInfo();
-	auto it = users.begin();
+	std::map<int, Client::ClientInfo>::iterator it = users.begin();
 
 	while (it != users.end())
 	{
@@ -104,9 +104,9 @@ void cmdInvite(Server& server, Client::ClientInfo& sender, int socketFd, const M
 
 	chan.addInvite(it->first);
 
-	std::string senderConfirm = ":" + SERVER_NAME + " 341 " + sender.nickname + " " + it->second.nickname + " " + channel + "\r\n";
+	std::string senderConfirm = RPL_INVITE(sender.nickname, it->second.nickname, channel);
 	std::string prefix = ":" + sender.nickname + "!" + sender.user + "@127.0.0.1";
 	std::string inviteMsg = prefix + " INVITE " + it->second.nickname + " :" + channel + "\r\n";
-	send(sender.fd, senderConfirm.c_str(), senderConfirm.size(), 0);
+	send(socketFd, senderConfirm.c_str(), senderConfirm.length(), 0);
 	send(it->first, inviteMsg.c_str(), inviteMsg.size(), 0);
 }
