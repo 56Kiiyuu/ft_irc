@@ -18,7 +18,7 @@ CommandManager::CommandManager()
 	_commands["TOPIC"] = &cmdTopic;
 	_commands["KICK"] = &cmdKick;
 	_commands["PART"] = &cmdPart;
-	_commands["QUIT"] = &cmdQuit;
+	// _commands["QUIT"] = &cmdQuit;
 	_commands["INVITE"] = &cmdInvite;
 
 }

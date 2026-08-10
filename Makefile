@@ -14,16 +14,11 @@ SRCS =	srcs/main.cpp \
 		srcs/commands/Mode.cpp \
 		srcs/commands/Ping.cpp \
 		srcs/commands/Topic.cpp \
-<<<<<<< HEAD
 		srcs/commands/Kick.cpp \
 		srcs/commands/Part.cpp \
-		srcs/commands/Quit.cpp \
-		srcs/Channels.cpp
-=======
 		srcs/Channels.cpp \
-		srcs/commands/Kick.cpp \
 		srcs/commands/Invite.cpp
->>>>>>> c86808b (add invite juste quelque trucs a revoir comme les msg qui se send pas pour confirmer l'invitation au sender et crash chelou quand /quit dans un channel a +2 (tester + pour chercher d'ou ca peut venir))
+
 OBJS = $(SRCS:.cpp=.o)
 
 CPPFLAGS = -Wall -Werror -Wextra -std=c++98 -g -I$(INC)
