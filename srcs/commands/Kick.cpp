@@ -6,14 +6,15 @@
 #include "NumericReplies.hpp"
 
 void cmdKick(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg)
-{	
-	if (msg.getParams().size() != 2)
+{
+	std::cout << "KICK : args=" << msg.getParams().size() << std::endl;
+	if (msg.getParams().size() < 2)
 	{
 		std::string err = ERR_NEEDMOREPARAMS(sender.nickname, "KICK");
 		send(socketFd, err.c_str(), err.length(), 0);
 		return ;
 	}
-
+	std::cout << "1 ERR_NEEDMOREPARAMS: Pass" << std::endl;
 	std::string channel = msg.getParams()[0];
 	std::string target = msg.getParams()[1];
 
@@ -33,7 +34,7 @@ void cmdKick(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 		send(socketFd, err.c_str(), err.length(), 0);
 		return ;
 	}
-
+	std::cout << "2 ERR_NOSUCHCHANNEL: Pass" << std::endl;
 	Channels& chan = server.getChannels()[indexChannel];
 
 	// check que le user est dans le canal
@@ -55,7 +56,7 @@ void cmdKick(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 		send(socketFd, ERR_NOTONCHANNEL(sender.nickname, chan.getName()).c_str(), ERR_NOTONCHANNEL(sender.nickname, chan.getName()).length(), 0);
 		return;
 	}
-
+	std::cout << "3 ERR_NOTONCHANNEL: Pass" << std::endl;
 
 	// check que 'l'utilisateur est op
 	if (!chan.isOp(sender.fd))
@@ -64,7 +65,7 @@ void cmdKick(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 		send(socketFd, err.c_str(), err.length(), 0);
 		return;
 	}
-
+	std::cout << "4 ERR_CHANOPRIVSNEEDED: Pass" << std::endl;
 
 	int userIndex = -1;
 	int ownerIndex = -1;
@@ -96,6 +97,8 @@ void cmdKick(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 		send(socketFd, err.c_str(), err.length(), 0);
 		return;
 	}
+	std::cout << "5 ERR_USERNOTINCHANNEL: Pass" << std::endl;
+
 
 	std::string prefix = ":" + sender.nickname + "!" + sender.user + "@127.0.0.1";
 	std::string formattedMsg = prefix + " KICK";
