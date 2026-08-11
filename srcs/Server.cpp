@@ -121,6 +121,8 @@ void Server::handleCmds(std::string& buffClient, int socketFd)
 			Client::ClientInfo& sender = clients.getClientInfo()[socketFd];
 			Message msg(line);
 			_cmdManager.routeCommand(*this, sender, socketFd, msg);
+			if (this->clients.getClientInfo().find(socketFd) == this->clients.getClientInfo().end())
+				return;
 		}
 		if (this->clients.getClientInfo().find(socketFd) == this->clients.getClientInfo().end())
 		{
@@ -308,16 +310,11 @@ void Server::disconnectClient(int clientFd, const std::string& quitReason)
 	}
 
 	//retirer client des channels et suppr si vides
-	std::vector<Channels>::iterator cIt = channels.begin();
-	while (cIt != channels.end())
+	for (int i = static_cast<int>(channels.size()) - 1; i >= 0; --i)
 	{
-		if (cIt->getUser().empty())
+		if (channels[i].getUser().empty())
 		{
-			cIt = channels.erase(cIt);
-		}
-		else
-		{
-			++cIt;
+			channels.erase(channels.begin() + i);
 		}
 	}
 
