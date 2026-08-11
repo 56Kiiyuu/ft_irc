@@ -69,6 +69,7 @@ const std::vector<std::string>&	Message::getParams() const {
 	return _params;
 }
 
+/*
 void Message::printDebug() const {
 	std::cout << "--- Message Debug ---" << std::endl;
 	std::cout << "Brut : " << _raw << std::endl;
@@ -79,3 +80,4 @@ void Message::printDebug() const {
 	}
 	std::cout << "\n---------------------" << std::endl;
 }
+*/

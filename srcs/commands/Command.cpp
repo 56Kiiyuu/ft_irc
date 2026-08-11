@@ -1,6 +1,7 @@
 #include "Command.hpp"
 #include "Server.hpp"
 #include "Client.hpp"
+#include "NumericReplies.hpp"
 #include "Message.hpp"
 #include <iostream>
 #include <sstream>
@@ -18,7 +19,7 @@ CommandManager::CommandManager()
 	_commands["TOPIC"] = &cmdTopic;
 	_commands["KICK"] = &cmdKick;
 	_commands["PART"] = &cmdPart;
-	// _commands["QUIT"] = &cmdQuit;
+	_commands["QUIT"] = &cmdQuit;
 	_commands["INVITE"] = &cmdInvite;
 
 }
@@ -51,6 +52,8 @@ void CommandManager::routeCommand(Server& server, Client::ClientInfo& sender, in
 	else
 	{
 		std::cout << "Commande inconnue : " << cmd << std::endl;
-		// sendReply(...) ERR_UNKNOWNCOMMAND (421)
+		std::string nick = sender.nickname.empty() ? "*" : sender.nickname;
+		std::string reply = ERR_UNKNOWNCOMMAND(nick, cmd);
+		send(socketFd, reply.c_str(), reply.length(), 0);
 	}
 }

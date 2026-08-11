@@ -16,8 +16,9 @@ SRCS =	srcs/main.cpp \
 		srcs/commands/Topic.cpp \
 		srcs/commands/Kick.cpp \
 		srcs/commands/Part.cpp \
-		srcs/Channels.cpp \
-		srcs/commands/Invite.cpp
+		srcs/commands/Quit.cpp \
+		srcs/commands/Invite.cpp \
+		srcs/Channels.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 

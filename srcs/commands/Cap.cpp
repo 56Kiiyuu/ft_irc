@@ -6,7 +6,7 @@
 /*   By: kevlim <kevlim@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/29 14:08:38 by kevlim            #+#    #+#             */
-/*   Updated: 2026/07/29 14:21:03 by kevlim           ###   ########.fr       */
+/*   Updated: 2026/08/11 15:03:59 by kevlim           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ void cmdCap(Server& server, Client::ClientInfo& sender, int socketFd, const Mess
 
 	if (!msg.getParams().empty() && msg.getParams()[0] == "LS")
 	{
-		std::string reply = ":server CAP * LS :\r\n";
+		std::string reply = ":ircserv CAP * LS :\r\n";
 		send(socketFd, reply.c_str(), reply.length(), 0);
 		std::cout << "[CAP] Réponse envoyée à Irssi sur FD " << socketFd << std::endl;
 	}
