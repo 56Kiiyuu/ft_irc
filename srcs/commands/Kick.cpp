@@ -8,7 +8,7 @@
 void cmdKick(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg)
 {
 	std::cout << "KICK : args=" << msg.getParams().size() << std::endl;
-	if (msg.getParams().size() < 2)
+	if (msg.getParams().size() < 2 || msg.getParams().size() > 3)
 	{
 		std::string err = ERR_NEEDMOREPARAMS(sender.nickname, "KICK");
 		send(socketFd, err.c_str(), err.length(), 0);
