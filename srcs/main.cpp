@@ -2,10 +2,9 @@
 #include "Server.hpp"
 #include "Client.hpp"
 #include "Message.hpp"
+#include <csignal>
 
-#include <signal.h>
-
-Server server;
+Server* g_server = 0;
 
 void	handler(int sig, siginfo_t *info, void *context)
 {
@@ -13,9 +12,13 @@ void	handler(int sig, siginfo_t *info, void *context)
 	(void)context;
 
 	if (sig == SIGINT)
-	{
-		server.getRun() = 0;
-	}
+    {
+        std::cout << "\n[+] STOP Server claim" << std::endl;
+        if (g_server != 0)
+        {
+            g_server->getRun() = 0;
+        }
+    }
 }
 
 
@@ -28,15 +31,28 @@ int main(int argc, char **argv)
 	}
 
 	signal(SIGPIPE, SIG_IGN);
-	std::string password = argv[2];
-	server.setPassword(password);
 	struct sigaction sa;
-
 	sa.sa_sigaction = handler;
 	sa.sa_flags = SA_SIGINFO;
 	sigemptyset(&sa.sa_mask);
 	sigaction(SIGINT, &sa, NULL);
 
-	server.startServer();
+	std::string password = argv[2];
+
+	try
+	{
+		Server server;
+		server.setPassword(password);
+		g_server = &server;
+		server.startServer();
+	}
+	catch (const std::exception& e)
+	{
+		std::cerr << e.what() << std::endl;
+		g_server = NULL;
+		return 1;
+	}
+	g_server = NULL;
+	std::cout << "[+] Server STOP" << std::endl;
 	return 0;
 }

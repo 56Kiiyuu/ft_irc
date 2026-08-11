@@ -4,14 +4,22 @@
 #include "NumericReplies.hpp"
 #include <iostream>
 #include <unistd.h>
+#include <stdexcept>
 #include <set>
 #include <stdio.h>
 
 Server::Server() : clients()
 {
-	// initCommands();
-
 	this->_socketServer = socket(AF_INET, SOCK_STREAM, 0);
+	if (this->_socketServer < 0)
+	{
+		throw std::runtime_error("Error: socket server creation failed");
+	}
+	if (fcntl(this->_socketServer, F_SETFL, O_NONBLOCK) < 0)
+	{
+		close(this->_socketServer);
+		throw std::runtime_error("Error: fcntl server non-blocking failed");
+	}
 	this->_addrServer.sin_addr.s_addr = inet_addr("127.0.0.1");
 	this->_addrServer.sin_family = AF_INET;
 	this->_addrServer.sin_port = htons(6667);
@@ -22,6 +30,18 @@ Server::Server() : clients()
 
 Server::~Server()
 {
+	std::vector<struct pollfd>& pollFd = this->clients.getPollFd();
+	for (size_t i = 0; i < pollFd.size(); ++i)
+	{
+		if (pollFd[i].fd >= 0)
+		{
+			close(pollFd[i].fd);
+			pollFd[i].fd = -1;
+		}
+	}
+	if (this->_socketServer >= 0)
+		close(this->_socketServer);
+
 	std::cout << "server destructor" << std::endl;
 }
 
@@ -86,30 +106,28 @@ void Server::handleCon()
 
 void Server::handleCmds(std::string& buffClient, int socketFd)
 {
-	while (true)
+	std::string line = rnl(buffClient);
+
+	while (!line.empty())
 	{
 		if (this->clients.getClientInfo().find(socketFd) == this->clients.getClientInfo().end())
 		{
 			buffClient.clear();
 			return;
 		}
-		std::string line = rnl(buffClient);
-		// si plus de ligne avec \n ou \r\n = sort
-		if (line.empty() && buffClient.find("\n") == std::string::npos)
-			break;
 		// si ligne vide = saute
-		if (line.empty() || line.find_first_not_of(" \t\r\n") == std::string::npos)
-			continue;
-
-		Client::ClientInfo& sender = clients.getClientInfo()[socketFd];
-		Message msg(line);
-		_cmdManager.routeCommand(*this, sender, socketFd, msg);
-
+		if (line.find_first_not_of(" \t\r\n") != std::string::npos)
+		{
+			Client::ClientInfo& sender = clients.getClientInfo()[socketFd];
+			Message msg(line);
+			_cmdManager.routeCommand(*this, sender, socketFd, msg);
+		}
 		if (this->clients.getClientInfo().find(socketFd) == this->clients.getClientInfo().end())
 		{
 			buffClient.clear();
 			return;
 		}
+		line = rnl(buffClient);
 	}
 }
 
@@ -125,7 +143,11 @@ void Server::handlePoll()
 		if (nbEvent < 0)
 		{
 			if (errno == EINTR) //sigint
+			{
+				if (!this->_run)
+					return;
 				continue;
+			}
 			std::cout << "Error with poll" << strerror(errno) << std::endl;
 			return;
 		}
@@ -255,7 +277,7 @@ void Server::disconnectClient(int clientFd, const std::string& quitReason)
 	std::vector<Channels>& channels = this->getChannels();
 	std::set<int> recipients;
 	//clear client de tous les channels
-	for (std::size_t i = 0; i < channels.size(); )
+	for (std::size_t i = 0; i < channels.size(); i++)
 	{
 		std::vector<int>& users = channels[i].getUser();
 		bool wasInChan = false;
