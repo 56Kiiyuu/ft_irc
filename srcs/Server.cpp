@@ -207,6 +207,7 @@ void Server::handlePoll()
 			}
 		}
 	}
+	// close(this->_socketServer);
 }
 
 void Server::startServer()

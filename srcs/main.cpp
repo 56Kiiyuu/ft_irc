@@ -12,13 +12,13 @@ void	handler(int sig, siginfo_t *info, void *context)
 	(void)context;
 
 	if (sig == SIGINT)
-    {
-        std::cout << "\n[+] STOP Server claim" << std::endl;
-        if (g_server != 0)
-        {
-            g_server->getRun() = 0;
-        }
-    }
+	{
+		std::cout << "\n[+] STOP Server claim" << std::endl;
+		if (g_server != 0)
+		{
+			g_server->getRun() = 0;
+		}
+	}
 }
 
 
