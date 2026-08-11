@@ -20,6 +20,11 @@ Server::Server() : clients()
 		close(this->_socketServer);
 		throw std::runtime_error("Error: fcntl server non-blocking failed");
 	}
+
+	int opt = 1;
+	if (setsockopt(this->_socketServer, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+		perror("setsockopt SO_REUSEADDR failed");
+
 	this->_addrServer.sin_addr.s_addr = inet_addr("127.0.0.1");
 	this->_addrServer.sin_family = AF_INET;
 	this->_addrServer.sin_port = htons(6667);
@@ -30,18 +35,6 @@ Server::Server() : clients()
 
 Server::~Server()
 {
-	std::vector<struct pollfd>& pollFd = this->clients.getPollFd();
-	for (size_t i = 0; i < pollFd.size(); ++i)
-	{
-		if (pollFd[i].fd >= 0)
-		{
-			close(pollFd[i].fd);
-			pollFd[i].fd = -1;
-		}
-	}
-	if (this->_socketServer >= 0)
-		close(this->_socketServer);
-
 	std::cout << "server destructor" << std::endl;
 }
 
