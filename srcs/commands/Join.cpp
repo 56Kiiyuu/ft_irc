@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Join.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gabch <gabch@student.42.fr>                +#+  +:+       +#+        */
+/*   By: kevlim <kevlim@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/29 13:16:57 by kevlim            #+#    #+#             */
-/*   Updated: 2026/08/10 15:57:26 by gabch            ###   ########.fr       */
+/*   Updated: 2026/08/13 13:42:44 by kevlim           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,35 @@ void cmdJoin(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 	}
 
 	// si JOIN 0 = leave tout channel
-	//TODO appliquer la logique de PART DEDANS
+	if (msg.getParams()[0] == "0")
+	{
+		std::vector<Channels>& channels = server.getChannels();
+		for (int i = static_cast<int>(channels.size()) - 1; i >= 0; --i)
+		{
+			std::vector<int> users = channels[i].getUser();
+			bool wasInChan = false;
+			for (std::size_t u = 0; u < users.size(); u++)
+			{
+				if (users[u] == socketFd)
+				{
+					wasInChan = true;
+					break;
+				}
+			}
+			if (wasInChan)
+			{
+				std::string prefix = ":" + sender.nickname + "!" + sender.user + "@127.0.0.1";
+				std::string partMsg = prefix + " PART " + channels[i].getName() + " :left all channels (JOIN 0)\r\n";
+				channels[i].sendMsg(-1, server.getServerSocket(), partMsg);
+				channels[i].removeUser(socketFd);
+				if (channels[i].getUser().empty())
+				{
+					channels.erase(channels.begin() + i);
+				}
+			}
+		}
+		return;
+	}
 
 	// decoupe salons et cles
 	std::vector<std::string> chanList = splitString(msg.getParams()[0], ',');

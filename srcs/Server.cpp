@@ -23,7 +23,11 @@ Server::Server() : clients()
 
 	int opt = 1;
 	if (setsockopt(this->_socketServer, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
-		perror("setsockopt SO_REUSEADDR failed");
+	{
+		std::cerr << "Error: setsockopt SO_REUSEADDR failed (errno: " << errno << ")" << std::endl;
+		close(this->_socketServer);
+		throw std::runtime_error("Error: setsockopt failed");
+	}
 
 	this->_addrServer.sin_addr.s_addr = inet_addr("127.0.0.1");
 	this->_addrServer.sin_family = AF_INET;
@@ -81,6 +85,13 @@ bool Server::readSocketFd(std::string& buff, struct pollfd& pollFd)
 		tmpBuffChar[n] = '\0';
 		buff.append(tmpBuffChar, n);
 		return true; //donnees recu succes
+	}
+	if (n < 0)
+	{
+		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)
+			return true;
+		std::cerr << "[-] Erreur recv sur le client FD " << pollFd.fd << " (errno: " << errno << ")" << std::endl;
+		return false;
 	}
 	std::cout << "[-] Client FD " << pollFd.fd << " deconnecte." << std::endl;
 	return false;
@@ -143,7 +154,7 @@ void Server::handlePoll()
 					return;
 				continue;
 			}
-			std::cout << "Error with poll" << strerror(errno) << std::endl;
+			std::cout << "Error with poll (errno: " << errno << ")" << std::endl;
 			return;
 		}
 
