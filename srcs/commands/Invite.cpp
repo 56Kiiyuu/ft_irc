@@ -94,7 +94,7 @@ void cmdInvite(Server& server, Client::ClientInfo& sender, int socketFd, const M
 		if (chan.getUser()[i] == it->first)
 			userAlreadyInChannel = true;
 	}
-	
+
 	if (userAlreadyInChannel)
 	{
 		std::string err = ERR_USERALREADYINCHANNEL(sender.nickname, target, channel);
@@ -104,7 +104,7 @@ void cmdInvite(Server& server, Client::ClientInfo& sender, int socketFd, const M
 
 	chan.addInvite(it->first);
 
-	std::string senderConfirm = RPL_INVITE(sender.nickname, it->second.nickname, channel);
+	std::string senderConfirm = RPL_INVITING(sender.nickname, it->second.nickname, channel);
 	std::string prefix = ":" + sender.nickname + "!" + sender.user + "@127.0.0.1";
 	std::string inviteMsg = prefix + " INVITE " + it->second.nickname + " :" + channel + "\r\n";
 	send(socketFd, senderConfirm.c_str(), senderConfirm.length(), 0);
