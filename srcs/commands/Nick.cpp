@@ -80,20 +80,33 @@ void	cmdNick(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 	std::string oldNick = sender.nickname;
 	sender.nickname = newNick;
 	std::cout << "[NICK] New nickname : " << sender.nickname << std::endl;
-	if (!sender.nickname.empty() && !sender.user.empty())
-	{
-		std::string welcome = ":server 001 " + sender.nickname + " :Welcome to the IRC Network " + sender.nickname + "\r\n";
-		send(socketFd, welcome.c_str(), welcome.length(), 0);
-		std::cout << "[SERVER] Sent RPL_WELCOME (001) to " << sender.nickname << std::endl;
-	}
 
 	// if already registered and changed nick
 	if (sender.isRegistered)
 	{
 		std::string nickMsg = ":" + oldNick + "!" + sender.user + "@127.0.0.1 NICK " + newNick + "\r\n";
-		send(socketFd, nickMsg.c_str(), nickMsg.length(), 0);
+		
+		std::set<int> recipients;
+        recipients.insert(socketFd);
 
 		// TODO: Prevenir aussi les membres des salons ou se trouve le client
+		std::vector<Channels*>& channelList = server.getChannels();
+        for (size_t i = 0; i < channelList.size(); ++i)
+        {
+            if (channelList[i]->hasUser(socketFd))
+            {
+                const std::vector<int>& users = channelList[i]->getUsers();
+                for (size_t j = 0; j < users.size(); ++j)
+                {
+                    recipients.insert(users[j]); // std::set elimine automatiquement les doublons
+                }
+            }
+        }
+
+		for (std::set<int>::iterator it = recipients.begin(); it != recipients.end(); ++it)
+        {
+            send(*it, nickMsg.c_str(), nickMsg.length(), 0);
+        }
 		return;
 	}
 
