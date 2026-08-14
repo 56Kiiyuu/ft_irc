@@ -8,7 +8,7 @@
 #include <set>
 #include <stdio.h>
 
-Server::Server() : clients()
+Server::Server(int port, const std::string& password) : _password(password), _run(1), clients()
 {
 	this->_socketServer = socket(AF_INET, SOCK_STREAM, 0);
 	if (this->_socketServer < 0)
@@ -29,12 +29,11 @@ Server::Server() : clients()
 		throw std::runtime_error("Error: setsockopt failed");
 	}
 
-	this->_addrServer.sin_addr.s_addr = inet_addr("127.0.0.1");
+	this->_addrServer.sin_addr.s_addr = INADDR_ANY;
 	this->_addrServer.sin_family = AF_INET;
-	this->_addrServer.sin_port = htons(6667);
+	this->_addrServer.sin_port = htons(port);
 
 	clients.addNewClient(this->_socketServer, this->_addrServer);
-	this->_run = 1;
 }
 
 Server::~Server()
@@ -87,13 +86,9 @@ bool Server::readSocketFd(std::string& buff, struct pollfd& pollFd)
 		return true; //donnees recu succes
 	}
 	if (n < 0)
-	{
-		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)
-			return true;
-		std::cerr << "[-] Erreur recv sur le client FD " << pollFd.fd << " (errno: " << errno << ")" << std::endl;
-		return false;
-	}
-	std::cout << "[-] Client FD " << pollFd.fd << " deconnecte." << std::endl;
+		std::cerr << "[-] Erreur recv sur le client FD " << pollFd.fd << std::endl;
+	else
+		std::cout << "[-] Client FD " << pollFd.fd << " deconnecte." << std::endl;
 	return false;
 }
 
@@ -103,6 +98,11 @@ void Server::handleCon()
 
 	socklen_t addrClientSize = sizeof(this->_addrClient);
 	this->_socketClient = accept(this->_socketServer, (struct sockaddr *)&this->_addrClient, &addrClientSize);
+	if (this->_socketClient < 0)
+	{
+		std::cerr << "[-] Error accept client" << std::endl;
+		return;
+	}
 	fcntl(this->_socketClient, F_SETFL, O_NONBLOCK);
 	this->clients.addNewClient(this->_socketClient, this->_addrClient);
 	std::cout << "Accept & Add new client FD " << this->_socketClient << std::endl;

@@ -46,7 +46,7 @@ class Server
 		void 					handleCmds(std::string& buffClient, int socketFd);
 		// + plus tard;
 	public:
-		Server();
+		Server(int port, const std::string& password);
 		~Server();
 
 		void					startServer();
