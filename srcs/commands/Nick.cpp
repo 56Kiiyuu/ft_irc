@@ -76,13 +76,13 @@ void cmdNick(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
     // if already registered and changed nick
     if (sender.isRegistered)
     {
-        // nick msg
+        // nick msg format RFC (:OldNick!user@host NICK :NewNick)
         std::string nickMsg = ":" + oldNick + "!" + sender.user + "@127.0.0.1 NICK :" + newNick + "\r\n";
         
         std::set<int> recipients;
         recipients.insert(socketFd);
 
-        // announce others members
+        // announce other members in same channels
         std::vector<Channels*>& channelList = server.getChannels();
         for (size_t i = 0; i < channelList.size(); ++i)
         {
@@ -91,7 +91,7 @@ void cmdNick(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
                 const std::vector<int>& users = channelList[i]->getUsers();
                 for (size_t j = 0; j < users.size(); ++j)
                 {
-                    recipients.insert(users[j]); // std::set suppress doubles
+                    recipients.insert(users[j]); // std::set suppresses duplicates
                 }
             }
         }
