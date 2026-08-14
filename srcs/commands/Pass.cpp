@@ -6,7 +6,7 @@
 /*   By: kevlim <kevlim@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/29 12:50:44 by kevlim            #+#    #+#             */
-/*   Updated: 2026/07/31 15:51:34 by kevlim           ###   ########.fr       */
+/*   Updated: 2026/08/14 12:52:30 by kevlim           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,15 +22,6 @@
 void	cmdPass(Server& server, Client::ClientInfo& sender, int socketFd, const Message& msg)
 {
 	std::string clientNick = sender.nickname.empty() ? "*" : sender.nickname;
-	//check if pass exist
-	if (msg.getParams().empty() || msg.getParams()[0].empty())
-	{
-		std::string err = ERR_NEEDMOREPARAMS(clientNick, "PASS");
-		send(socketFd, err.c_str(), err.length(), 0);
-		std::cout << "[PASS] ERR_NEEDMOREPARAMS (461) envoye a FD " << socketFd << std::endl;
-		sender.hasPass = false;
-		return;
-	}
 
 	//check if already registered
 	if (sender.isRegistered)
@@ -38,6 +29,16 @@ void	cmdPass(Server& server, Client::ClientInfo& sender, int socketFd, const Mes
 		std::string err = ERR_ALREADYREGISTRED(clientNick);
 		send(socketFd, err.c_str(), err.length(), 0);
 		std::cout << "[PASS] ERR_ALREADYREGISTRED (462) envoye a " << clientNick << std::endl;
+		return;
+	}
+
+	//check if pass exist
+	if (msg.getParams().empty() || msg.getParams()[0].empty())
+	{
+		std::string err = ERR_NEEDMOREPARAMS(clientNick, "PASS");
+		send(socketFd, err.c_str(), err.length(), 0);
+		std::cout << "[PASS] ERR_NEEDMOREPARAMS (461) envoye a FD " << socketFd << std::endl;
+		sender.hasPass = false;
 		return;
 	}
 
