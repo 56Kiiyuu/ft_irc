@@ -218,15 +218,13 @@ void Server::startServer()
 {
 	if (bind(this->_socketServer, (const struct sockaddr *)&this->_addrServer, sizeof(this->_addrServer)) == -1)
 	{
-		perror("bind: ");
-		return ;
+		throw std::runtime_error(std::string("Error: bind failed: ") + strerror(errno));		return ;
 	}
 	std::cout << "Bind Server" << std::endl;
 
 	if (listen(this->_socketServer, SOMAXCONN) == -1)
 	{
-		std::cout << "Error: bind" << std::endl;
-		return ;
+		throw std::runtime_error(std::string("Error: listen failed: ") + strerror(errno));
 	}
 	std::cout << "Server listening" << std::endl;
 	handlePoll();
