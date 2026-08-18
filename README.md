@@ -53,7 +53,7 @@ irssi -c 127.0.0.1 -p 6667 -w 1234 -n MyNickname
 
 ## Ressources
 
-[Modern IRC Client Protocol](https://modern.ircdocs.horse) : guidelines used for the network architecture, message syntax, and numeric error replies.
-[Vector Docs](https://cplusplus.com/reference/vector/vector/) : Documentation describing the various methods of the `vector` class.
-[String Docs](https://cplusplus.com/reference/string/string/) : Documentation describing the various methods of the `string` class.
-[Tutorial Sockets C](https://www.youtube.com/watch?v=s3o5tixMFho) : A short video explaining sockets using real-world examples.
+* [Modern IRC Client Protocol](https://modern.ircdocs.horse) : guidelines used for the network architecture, message syntax, and numeric error replies.
+* [Vector Docs](https://cplusplus.com/reference/vector/vector/) : Documentation describing the various methods of the `vector` class.
+* [String Docs](https://cplusplus.com/reference/string/string/) : Documentation describing the various methods of the `string` class.
+* [Tutorial Sockets C](https://www.youtube.com/watch?v=s3o5tixMFho) : A short video explaining sockets using real-world examples.
